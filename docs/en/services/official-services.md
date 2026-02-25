@@ -6,7 +6,7 @@ This page describes the official technical service offerings and terms for Dujia
 
 ## 1. Deployment Setup Service
 
-- Fee: one-time 100U
+- Fee: one-time `50USD`
 - Warranty: Q&A or issue resolution within 7 days
 - Client prerequisites:
   - Domain name
@@ -18,12 +18,12 @@ This page describes the official technical service offerings and terms for Dujia
 
 ## 2. Custom Development Service
 
-- Pricing: starts from 200U
+- Pricing: starts from `200USD`
 - Notes: scope, timeline, and quote are determined by specific requirements
 
 ## 3. Managed Service
 
-- Pricing: 200U / month, 1800U / year
+- Pricing: `200USD` / month, `1800USD` / year
 - Service scope:
   - Priority handling of technical issues
   - Timely technical response
