@@ -257,7 +257,20 @@ Additional notes:
 | `use_tls`/`use_ssl` | bool | Transport security strategy | Choose one, follow provider documentation |
 | `verify_code.*` | mixed | Verification code validity, frequency, length | Default values commonly used |
 
-## 5.11 `order`
+## 5.11 `bootstrap`
+
+| Field | Type | Description | Recommended |
+| --- | --- | --- | --- |
+| `default_admin_username` | string | Username for first-time default admin initialization | Set it explicitly to your own admin username |
+| `default_admin_password` | string | Password for first-time default admin initialization | Set a strong password |
+
+Additional notes:
+
+- The default admin is only created when the `admins` table is empty.
+- Priority: `DJ_DEFAULT_ADMIN_USERNAME` / `DJ_DEFAULT_ADMIN_PASSWORD` (environment variables) > `bootstrap.default_admin_username` / `bootstrap.default_admin_password` (`config.yml`) > system defaults.
+- In `release` mode, if no admin password is provided in either environment variables or `config.yml`, default admin initialization will be skipped.
+
+## 5.12 `order`
 
 | Field | Type | Description | Recommended |
 | --- | --- | --- | --- |
@@ -267,7 +280,7 @@ Additional notes:
 
 - The effective value may be overridden by admin settings (see "Runtime Override Priority" below).
 
-## 5.12 `telegram_auth` (optional)
+## 5.13 `telegram_auth` (optional)
 
 | Field | Type | Description | Recommended |
 | --- | --- | --- | --- |
@@ -277,7 +290,7 @@ Additional notes:
 | `login_expire_seconds` | int | Login validity (seconds) | `300` |
 | `replay_ttl_seconds` | int | Replay protection TTL (seconds) | `300` |
 
-## 5.13 `captcha` (optional)
+## 5.14 `captcha` (optional)
 
 `config.yml.example` may not show this section completely, but it is supported by the system.
 
@@ -309,7 +322,7 @@ captcha:
     timeout_ms: 2000
 ```
 
-## 5.14 Runtime Override Priority (Important)
+## 5.15 Runtime Override Priority (Important)
 
 The following items can be changed dynamically in admin settings and have higher priority than `config.yml`:
 
@@ -325,6 +338,8 @@ If you changed `config.yml` but behavior did not change, check admin settings fi
 - `DATABASE_DSN=host=127.0.0.1 ...`
 - `JWT_SECRET=...`
 - `USER_JWT_SECRET=...`
+- `DJ_DEFAULT_ADMIN_USERNAME=admin`
+- `DJ_DEFAULT_ADMIN_PASSWORD=<your-strong-password>`
 - `REDIS_HOST=127.0.0.1`
 - `CAPTCHA_TURNSTILE_SITE_KEY=...`
 - `TELEGRAM_AUTH_ENABLED=true`

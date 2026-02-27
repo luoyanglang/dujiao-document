@@ -1,6 +1,6 @@
 # 使用 aaPanel 手动部署（基于 Releases 压缩包）
 
-> 更新时间：2026-02-12
+> 更新时间：2026-02-27
 
 本文档适用于你已在各仓库 Release 中提供编译产物压缩包的部署方式。
 
@@ -104,7 +104,17 @@ chmod +x ./dujiao-next
 
 > 强烈建议：首次登录后台后立即修改密码。
 
-如已在 PM2/Supervisor 设置 `DJ_DEFAULT_ADMIN_USERNAME` / `DJ_DEFAULT_ADMIN_PASSWORD`，则以你设置的值为准。
+如已在 PM2/Supervisor 设置 `DJ_DEFAULT_ADMIN_USERNAME` / `DJ_DEFAULT_ADMIN_PASSWORD`，则以你设置的值为准（优先级最高）。
+
+若未设置上述环境变量，也可以在 `config.yml` 中配置：
+
+```yaml
+bootstrap:
+  default_admin_username: admin
+  default_admin_password: <你的强密码>
+```
+
+API 首次启动时会读取该配置完成管理员初始化。
 
 ## 5. 部署 User 与 Admin（无需构建）
 

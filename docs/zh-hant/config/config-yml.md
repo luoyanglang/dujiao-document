@@ -260,7 +260,20 @@ database:
 | `use_tls`/`use_ssl` | bool | 傳輸安全策略 | 二選一，按服務商文檔 |
 | `verify_code.*` | mixed | 驗證碼有效期、頻率、長度 | 常用默認值 |
 
-## 5.11 `order`
+## 5.11 `bootstrap`
+
+| 字段 | 類型 | 說明 | 推薦 |
+| --- | --- | --- | --- |
+| `default_admin_username` | string | 首次初始化管理員用戶名 | 建議顯式設置為你自己的管理員賬號 |
+| `default_admin_password` | string | 首次初始化管理員密碼 | 建議設置強密碼 |
+
+補充：
+
+- 僅當數據庫 `admins` 表為空時，首次啟動才會嘗試創建默認管理員。
+- 優先級：`DJ_DEFAULT_ADMIN_USERNAME` / `DJ_DEFAULT_ADMIN_PASSWORD`（環境變量） > `bootstrap.default_admin_username` / `bootstrap.default_admin_password`（`config.yml`） > 系統默認值。
+- 若運行在 `release` 模式且環境變量與 `config.yml` 都未提供管理員密碼，系統會跳過默認管理員初始化。
+
+## 5.12 `order`
 
 | 字段 | 類型 | 說明 | 推薦 |
 | --- | --- | --- | --- |
@@ -270,7 +283,7 @@ database:
 
 - 實際生效值可能會被後台系統設置覆蓋（見下方「運行時覆蓋優先級」）。
 
-## 5.12 `telegram_auth`（可選）
+## 5.13 `telegram_auth`（可選）
 
 | 字段 | 類型 | 說明 | 推薦 |
 | --- | --- | --- | --- |
@@ -280,7 +293,7 @@ database:
 | `login_expire_seconds` | int | 登入有效期（秒） | `300` |
 | `replay_ttl_seconds` | int | 重放保護時長（秒） | `300` |
 
-## 5.13 `captcha`（可選）
+## 5.14 `captcha`（可選）
 
 `config.yml.example` 可能未完整展示該段，但系統已支持。
 
@@ -312,7 +325,7 @@ captcha:
     timeout_ms: 2000
 ```
 
-## 5.14 運行時覆蓋優先級（重要）
+## 5.15 運行時覆蓋優先級（重要）
 
 以下配置支持在後台「設置」中動態修改，且優先級高於 `config.yml`：
 
@@ -329,6 +342,8 @@ captcha:
 - `DATABASE_DSN=host=127.0.0.1 ...`
 - `JWT_SECRET=...`
 - `USER_JWT_SECRET=...`
+- `DJ_DEFAULT_ADMIN_USERNAME=admin`
+- `DJ_DEFAULT_ADMIN_PASSWORD=<你的強密碼>`
 - `REDIS_HOST=127.0.0.1`
 - `CAPTCHA_TURNSTILE_SITE_KEY=...`
 - `TELEGRAM_AUTH_ENABLED=true`

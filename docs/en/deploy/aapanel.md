@@ -1,6 +1,6 @@
 # Manually Deploy Using aaPanel (Based on Releases Archive)
 
-> Last Updated: 2026-02-12
+> Last Updated: 2026-02-27
 
 This document is for deploying using the compiled artifacts provided in the repository Releases.
 
@@ -98,7 +98,17 @@ When the `admins` table in the database is empty, the API will attempt to create
 
 > Strongly recommended: Change the password immediately after the first login to the admin panel.
 
-If you have already set `DJ_DEFAULT_ADMIN_USERNAME` / `DJ_DEFAULT_ADMIN_PASSWORD` in PM2/Supervisor, those values will take precedence.
+If you have already set `DJ_DEFAULT_ADMIN_USERNAME` / `DJ_DEFAULT_ADMIN_PASSWORD` in PM2/Supervisor, those values take highest priority.
+
+If those environment variables are not set, you can also configure `config.yml`:
+
+```yaml
+bootstrap:
+  default_admin_username: admin
+  default_admin_password: <your-strong-password>
+```
+
+On first startup, the API will read this configuration to initialize the admin account.
 
 ## 5. Deploying User and Admin (No Build Required)
 
