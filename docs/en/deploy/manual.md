@@ -1,6 +1,8 @@
 # Manual Deployment (API / User / Admin)
 
-> Last updated: 2026-02-11
+> Last updated: 2026-02-27
+
+If you have not chosen a deployment method yet, start with [Deployment Overview and Selection Guide](/en/deploy/).
 
 This document is intended for developers who want full control over the deployment process and is divided into two parts: "Build" and "Run".
 

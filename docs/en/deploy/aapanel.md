@@ -2,6 +2,8 @@
 
 > Last Updated: 2026-02-27
 
+If you have not chosen a deployment method yet, start with [Deployment Overview and Selection Guide](/en/deploy/).
+
 This document is for deploying using the compiled artifacts provided in the repository Releases.
 
 Features:

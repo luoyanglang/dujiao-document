@@ -1,6 +1,8 @@
 # Docker Compose Deployment (Docker Hub Images)
 
-> Last Updated: 2026-02-11
+> Last Updated: 2026-02-27
+
+If you have not chosen a deployment method yet, start with [Deployment Overview and Selection Guide](/en/deploy/).
 
 ## 1. Image Correspondence
 
