@@ -1,321 +1,224 @@
 # Payment Configuration and Callback Guide
 
-> Updated: 2026-02-11
+> Updated: 2026-02-27
 
-This document covers:
+You only need two outcomes:
 
-1. Currently supported payment methods
-2. How to configure channels in the admin panel (with field descriptions)
-3. Callback and webhook configuration
-4. Important notes and common pitfalls
+1. Customers can start payment successfully
+2. Orders are marked as paid automatically after payment
 
-## 1. Supported Payment Methods
+## 1. What You Need Before Starting
 
-## 1.1 Overview
+Make sure your payment callback endpoint is publicly reachable.  
+Both deployment styles are supported:
 
-| Provider | `provider_type` | `channel_type` | `interaction_mode` | Scenario |
-| --- | --- | --- | --- | --- |
-| EPay | `epay` | `wechat` / `wxpay` / `alipay` / `qqpay` | `qr` / `redirect` | Aggregated payment gateway |
-| BEpusdt | `epusdt` | `usdt-trc20` / `usdc-trc20` / `trx` | `redirect` | Cryptocurrency payment (USDT/USDC/TRX) |
-| Official | `official` | `paypal` | `redirect` | PayPal Checkout redirect |
-| Official | `official` | `stripe` | `redirect` | Stripe Checkout redirect |
-| Official | `official` | `alipay` | `qr` / `wap` / `page` | Alipay Face-to-Face / WAP / Desktop |
-| Official | `official` | `wechat` | `qr` / `redirect` | WeChat Native (QR) / H5 |
+1. Same-origin reverse proxy (common)
+2. Separate frontend/backend domains
 
-## 1.2 Mapping for Main Official Payment Modes
+Common URL examples:
 
-- **Face-to-face payment**: `official + alipay + qr`
-- **Mobile web payment**:
-  - `official + alipay + wap`
-  - `official + wechat + redirect` (H5)
-- **Desktop web payment**:
-  - `official + alipay + page`
-  - `official + paypal + redirect`
-  - `official + stripe + redirect`
+- Same-origin reverse proxy
+  - Payment notification URL (callback): `https://shop.example.com/api/v1/payments/callback`
+  - Customer return page after payment: `https://shop.example.com/pay`
+- Separate frontend/backend domains
+  - Payment notification URL (callback): `https://api.example.com/api/v1/payments/callback`
+  - Customer return page after payment: `https://shop.example.com/pay`
 
-## 2. Admin Configuration (with Field Descriptions)
+Note: The rest of this guide uses the separate-domain example. If you use same-origin reverse proxy, replace `api.example.com` with your site domain.
 
-Configuration entry: `Admin → Payment Management → Payment Channels`.
+## 2. Where to Configure in Admin
 
-## 2.1 Common Fields
+Go to:
 
-| Field | Description |
-| --- | --- |
-| `name` | Display name shown on the checkout page |
-| `provider_type` | `official` or `epay` |
-| `channel_type` | Channel type, e.g. `paypal` / `stripe` / `alipay` / `wechat` |
-| `interaction_mode` | Interaction mode, e.g. `qr`, `redirect`, `wap`, `page` |
-| `fee_rate` | Fee ratio (0~100) |
-| `is_active` | Whether enabled |
-| `sort_order` | Sort value (higher appears first) |
-| `config_json` | Channel-specific configuration |
+- `Admin → Payment Management → Payment Channels → Create`
 
-## 2.2 PayPal (`official + paypal + redirect`)
+For each channel, do these 3 things:
 
-### Required
+1. Fill merchant credentials (keys/IDs from the payment provider)
+2. Fill callback URL (so the provider can notify your server)
+3. Enable the channel and set display order
+
+## 3. What to Fill for Each Payment Provider
+
+### 3.1 EPay
+
+Usually required:
+
+- Gateway URL (`gateway_url`)
+- Merchant ID (`merchant_id`)
+- Merchant key (v1) or private/public key pair (v2)
+- Notification URL (`notify_url`)
+- Return URL (`return_url`)
+
+Recommended:
+
+- `notify_url`: `https://api.example.com/api/v1/payments/callback`
+- `return_url`: `https://shop.example.com/pay`
+
+### 3.2 PayPal
+
+Usually required:
 
 - `client_id`
 - `client_secret`
-- `base_url`
+- `base_url` (sandbox or production)
 - `return_url`
 - `cancel_url`
 
-### Recommended
+Recommended:
 
-- `webhook_id` (strongly recommended for webhook signature verification)
-- `brand_name`
-- `locale`
+- Set both `return_url` and `cancel_url` to `https://shop.example.com/pay`
+- Fill `webhook_id` for better webhook verification
 
-### Example `config_json`
+### 3.3 Stripe
 
-```json
-{
-  "client_id": "YOUR_PAYPAL_CLIENT_ID",
-  "client_secret": "YOUR_PAYPAL_CLIENT_SECRET",
-  "base_url": "https://api-m.sandbox.paypal.com",
-  "return_url": "https://shop.example.com/pay",
-  "cancel_url": "https://shop.example.com/pay",
-  "webhook_id": "YOUR_WEBHOOK_ID"
-}
-```
-
-## 2.3 Stripe (`official + stripe + redirect`)
-
-### Required
+Usually required:
 
 - `secret_key`
 - `webhook_secret`
 - `success_url`
 - `cancel_url`
 - `api_base_url`
-- `payment_method_types` (at least one, default `card`)
 
-### Example `config_json`
+Recommended:
 
-```json
-{
-  "secret_key": "sk_test_xxx",
-  "publishable_key": "pk_test_xxx",
-  "webhook_secret": "whsec_xxx",
-  "success_url": "https://shop.example.com/pay",
-  "cancel_url": "https://shop.example.com/pay",
-  "api_base_url": "https://api.stripe.com",
-  "payment_method_types": ["card"]
-}
-```
+- Set both `success_url` and `cancel_url` to `https://shop.example.com/pay`
 
-## 2.4 Alipay (`official + alipay`)
+### 3.4 Alipay
 
-### Required
+Usually required:
 
 - `app_id`
-- `private_key`
-- `alipay_public_key`
-- `gateway_url`
-- `notify_url`
-- `sign_type` (`RSA2` / `RSA`, `RSA2` recommended)
+- App private key (`private_key`)
+- Alipay public key (`alipay_public_key`)
+- Gateway URL (`gateway_url`)
+- Notification URL (`notify_url`)
 
-### Conditionally Required
+Recommended:
 
-- When `interaction_mode` is `wap` or `page`: `return_url` is required
-- When `interaction_mode` is `qr` (face-to-face): `return_url` is optional (still recommended)
+- `notify_url`: `https://api.example.com/api/v1/payments/callback`
+- If you use WAP/Desktop payments, also fill `return_url`: `https://shop.example.com/pay`
 
-### Example `config_json`
+### 3.5 WeChat Pay
 
-```json
-{
-  "app_id": "YOUR_APP_ID",
-  "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
-  "alipay_public_key": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----",
-  "gateway_url": "https://openapi.alipay.com/gateway.do",
-  "notify_url": "https://api.example.com/api/v1/payments/callback",
-  "return_url": "https://shop.example.com/pay",
-  "sign_type": "RSA2"
-}
-```
-
-## 2.5 WeChat Pay (`official + wechat`)
-
-### Required
+Usually required:
 
 - `appid`
 - `mchid`
-- `merchant_serial_no`
-- `merchant_private_key`
-- `api_v3_key` (must be 32 characters)
-- `notify_url`
+- Merchant cert serial (`merchant_serial_no`)
+- Merchant private key (`merchant_private_key`)
+- `api_v3_key`
+- Notification URL (`notify_url`)
 
-### Conditionally Required
+Recommended:
 
-- When `interaction_mode = redirect` (H5): `h5_redirect_url` is required
-- When `interaction_mode = qr` (Native): `h5_redirect_url` is optional
+- `notify_url`: `https://api.example.com/api/v1/payments/callback?channel_id=YOUR_CHANNEL_ID`
+- For H5 mode, also fill `h5_redirect_url`: `https://shop.example.com/pay`
 
-### Optional
+### 3.6 TokenPay
 
-- `h5_type`: `WAP` / `IOS` / `ANDROID` (default `WAP`)
-- `h5_wap_url`
-- `h5_wap_name`
+Usually required:
 
-### Example `config_json`
+- Gateway URL (`gateway_url`)
+- Callback signature secret (`notify_secret`)
+- Notification URL (`notify_url`)
 
-```json
-{
-  "appid": "wx1234567890",
-  "mchid": "1900000109",
-  "merchant_serial_no": "4A3B2C1D...",
-  "merchant_private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
-  "api_v3_key": "32chars_api_v3_key_xxxxxxxxxxxx",
-  "notify_url": "https://api.example.com/api/v1/payments/callback?channel_id=12",
-  "h5_redirect_url": "https://shop.example.com/pay",
-  "h5_type": "WAP",
-  "h5_wap_url": "https://shop.example.com",
-  "h5_wap_name": "Dujiao-Next"
-}
-```
+Common optional fields:
 
-## 2.6 BEpusdt (`usdt-trc20` / `usdc-trc20` / `trx`)
+- Currency (`currency`, default USDT)
+- Redirect URL after payment (`redirect_url`)
+- Fiat display currency (`base_currency`, default CNY)
 
-### Required
+Recommended:
 
-- `gateway_url`: BEpusdt gateway address
-- `auth_token`: BEpusdt API Token
-- `notify_url`: Async callback URL
-- `return_url`: Payment success redirect URL
+- `notify_url`: `https://api.example.com/api/v1/payments/callback`
+- `redirect_url`: `https://shop.example.com/pay`
+- Supported currencies: <https://github.com/LightCountry/TokenPay/blob/master/Wiki/docs.md>
 
-### Optional
+### 3.7 BEpusdt
 
-- `fiat`: Fiat currency type, default `CNY` (supports `CNY` / `USD`)
-- `trade_type`: Transaction type (automatically set based on `channel_type`, usually no manual configuration needed)
+Usually required:
 
-### Example `config_json`
+- Gateway URL (`gateway_url`)
+- API token (`auth_token`)
+- Notification URL (`notify_url`)
+- Return URL (`return_url`)
 
-```json
-{
-  "gateway_url": "https://usdt.example.com",
-  "auth_token": "your_bepusdt_api_token",
-  "fiat": "CNY",
-  "notify_url": "https://api.example.com/api/v1/payments/callback",
-  "return_url": "https://shop.example.com/pay"
-}
-```
+Common optional fields:
 
-### Payment Methods
+- Trade type (`trade_type`)
+- Fiat type (`fiat`, usually CNY or USD)
 
-BEpusdt supports three cryptocurrency payment methods, each requiring a separate payment channel:
+Recommended:
 
-| `channel_type` | Currency | `trade_type` (auto-set) | Description |
-| --- | --- | --- | --- |
-| `usdt-trc20` | USDT (TRC20) | `usdt.trc20` | TRON network USDT |
-| `usdc-trc20` | USDC (TRC20) | `usdc.trc20` | TRON network USDC |
-| `trx` | TRX | `tron.trx` | TRON native token |
+- `notify_url`: `https://api.example.com/api/v1/payments/callback`
+- `return_url`: `https://shop.example.com/pay`
+- Supported currencies and trade types: <https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md>
 
-**Notes**:
-- `trade_type` is automatically set based on `channel_type`, no need to fill in configuration
-- `notify_url` path must be `/api/v1/payments/callback`
-- `return_url` path must be `/pay` (not `/order` or `/payment`)
-- Only supports `redirect` interaction mode, unified redirect to BEpusdt checkout page
+## 4. Callback & Webhook (Easy Reference)
 
-### Payment Flow
+### 4.1 Shared Callback URL (use the same URL)
 
-1. User selects BEpusdt payment method
-2. System creates payment order and redirects to BEpusdt checkout
-3. User completes payment on BEpusdt checkout (scan QR or transfer)
-4. After successful payment, BEpusdt sends async callback notification
-5. User is automatically redirected back to shop order details page
+Applies to:
 
-## 3. Callback and Webhook Configuration
+- Alipay
+- WeChat Pay
+- EPay
+- TokenPay
+- BEpusdt
 
-Assume your public API domain is `https://api.example.com`, then your callback base path is:
+Use:
 
-- `https://api.example.com/api/v1`
+- `POST https://api.example.com/api/v1/payments/callback`
 
-## 3.1 Generic Callback Endpoint (Alipay / WeChat / EPay / BEpusdt)
+### 4.2 PayPal (separate webhook URL)
 
-- Callback URL: `POST https://api.example.com/api/v1/payments/callback`
-- `GET` is only for compatibility/debug and is not recommended for production callbacks.
+Use:
 
-Recommended settings:
+- `POST https://api.example.com/api/v1/payments/webhook/paypal?channel_id=YOUR_CHANNEL_ID`
 
-- Alipay `notify_url`: `https://api.example.com/api/v1/payments/callback`
-- WeChat `notify_url`: `https://api.example.com/api/v1/payments/callback?channel_id=YOUR_CHANNEL_ID`
-- EPay `notify_url`: `https://api.example.com/api/v1/payments/callback`
-- BEpusdt `notify_url`: `https://api.example.com/api/v1/payments/callback`
+Note:
 
-## 3.2 PayPal Webhook
+- `channel_id` is required in current implementation.
 
-- Webhook URL: `POST https://api.example.com/api/v1/payments/webhook/paypal?channel_id=YOUR_CHANNEL_ID`
-- In current implementation, `channel_id` is required (validated by backend query parser).
+### 4.3 Stripe (separate webhook URL)
 
-Backend linkage:
+Use:
 
-- After creating a webhook in PayPal Console, copy `Webhook ID` to channel field `webhook_id`.
-- If `webhook_id` is empty, backend signature verification for PayPal webhooks is skipped.
+- `POST https://api.example.com/api/v1/payments/webhook/stripe?channel_id=YOUR_CHANNEL_ID`
 
-Recommended events:
+Note:
 
-- `CHECKOUT.ORDER.COMPLETED`
-- `CHECKOUT.ORDER.APPROVED`
-- `CHECKOUT.ORDER.DENIED`
-- `PAYMENT.CAPTURE.COMPLETED`
-- `PAYMENT.CAPTURE.PENDING`
-- `PAYMENT.CAPTURE.DENIED`
-- `PAYMENT.CAPTURE.DECLINED`
-- `PAYMENT.CAPTURE.FAILED`
+- `channel_id` is strongly recommended if you have multiple Stripe channels.
 
-## 3.3 Stripe Webhook
+## 5. 5-Minute Pre-Launch Checklist
 
-- Webhook URL: `POST https://api.example.com/api/v1/payments/webhook/stripe?channel_id=YOUR_CHANNEL_ID`
-- `channel_id` is optional but strongly recommended when multiple Stripe channels are enabled.
+Test in this order:
 
-Backend linkage:
+1. Place an order and confirm payment page/QR opens correctly
+2. Complete payment and confirm order status becomes paid automatically
+3. Confirm customer is redirected to `https://shop.example.com/pay`
+4. Confirm payment record appears in admin for that order
 
-- After creating an endpoint in Stripe Console, copy `Signing secret` into `webhook_secret`.
+## 6. Common Problems
 
-Recommended events:
+### Q1: Payment succeeded for user, but order is still unpaid in admin
 
-- `checkout.session.completed`
-- `checkout.session.async_payment_succeeded`
-- `checkout.session.async_payment_failed`
-- `checkout.session.expired`
-- `payment_intent.succeeded`
-- `payment_intent.processing`
-- `payment_intent.payment_failed`
-- `payment_intent.canceled`
+Check first:
 
-## 3.4 Frontend Return URLs (return/success/cancel)
+- Callback URL typo (domain/path)
+- API domain not publicly reachable
+- Failed callback logs in payment provider console
 
-Recommended unified path:
+### Q2: User does not return to your payment page
 
-- `https://shop.example.com/pay`
+Check first:
 
-Notes:
+- `return_url` / `success_url` / `cancel_url` / `redirect_url` are all set to `/pay`
 
-- For official channels (PayPal / Stripe / Alipay / WeChat H5), backend appends query parameters like `order_no` automatically when creating payment links.
-- You do not need to manually concatenate order numbers on the frontend.
+### Q3: Multiple channels under one provider cause mixed callbacks
 
-## 4. Notes and Pitfalls
+Fix:
 
-1. **Currency**
-   - Alipay and WeChat official channels currently run in RMB (`CNY`) in this implementation.
-   - Configure these channels for RMB use cases.
-
-2. **Multiple channels**
-   - When multiple channels from the same provider are enabled, webhook URLs should include `channel_id`.
-   - Especially for PayPal, missing `channel_id` causes parameter validation errors.
-
-3. **WeChat private key format**
-   - `merchant_private_key` supports plain PEM text and `\n`-escaped format.
-   - `pem decode failed` usually indicates incomplete or corrupted key content.
-
-4. **Callback reachability**
-   - Payment platforms must be able to access your callback URLs from the public network.
-   - Use full HTTPS in production.
-
-5. **Idempotency and repeated notifications**
-   - Payment providers may retry notifications; backend already handles idempotent payment state updates.
-   - Keep provider-side retries standard; avoid custom duplicate replay logic.
-
-6. **Integration testing order**
-   - First verify that order creation returns a valid payment URL/QR code.
-   - Then verify asynchronous callbacks can update payment status.
-   - Finally verify `/pay` auto-capture of latest status after return (PayPal/Stripe).
+- Always include `channel_id` in PayPal and Stripe webhook URLs
+- Keep only channels you actively use enabled

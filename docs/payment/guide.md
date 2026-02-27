@@ -1,321 +1,224 @@
 # 支付配置与回调指南
 
-> 更新时间：2026-02-11
+> 更新时间：2026-02-27
 
-本文档覆盖：
+目标只有两个：
 
-1. 目前支持的支付方式
-2. 后台如何配置（含字段解释）
-3. 回调地址与 Webhook 填写
-4. 注意事项与常见坑
+1. 用户能顺利发起支付
+2. 支付完成后，订单能自动变成“已支付”
 
-## 1. 目前支持的支付方式
+## 1. 开始前先准备
 
-## 1.1 总览
+先确认你的支付回调入口可以被公网访问。  
+部署方式支持两种：
 
-| 提供方 | `provider_type` | `channel_type` | `interaction_mode` | 场景说明 |
-| --- | --- | --- | --- | --- |
-| 易支付 | `epay` | `wechat` / `wxpay` / `alipay` / `qqpay` | `qr` / `redirect` | 聚合支付通道 |
-| BEpusdt | `epusdt` | `usdt-trc20` / `usdc-trc20` / `trx` | `redirect` | 加密货币支付（USDT/USDC/TRX） |
-| 官方 | `official` | `paypal` | `redirect` | PayPal Checkout 跳转支付 |
-| 官方 | `official` | `stripe` | `redirect` | Stripe Checkout 跳转支付 |
-| 官方 | `official` | `alipay` | `qr` / `wap` / `page` | 支付宝当面付 / 手机网站 / 电脑网站 |
-| 官方 | `official` | `wechat` | `qr` / `redirect` | 微信 Native（二维码）/ H5 |
+1. 同源反向代理（常见）
+2. 前后端分域（也支持）
 
-## 1.2 你关心的三类官方支付映射
+常用地址示例：
 
-- **当面付**：`official + alipay + qr`
-- **手机网站支付**：
-  - `official + alipay + wap`
-  - `official + wechat + redirect`（H5）
-- **电脑网站支付**：
-  - `official + alipay + page`
-  - `official + paypal + redirect`
-  - `official + stripe + redirect`
+- 同源反向代理
+  - 支付结果通知地址（回调）：`https://shop.example.com/api/v1/payments/callback`
+  - 用户支付完成返回页（回跳）：`https://shop.example.com/pay`
+- 前后端分域
+  - 支付结果通知地址（回调）：`https://api.example.com/api/v1/payments/callback`
+  - 用户支付完成返回页（回跳）：`https://shop.example.com/pay`
 
-## 2. 后台如何配置（含字段解释）
+说明：本文后续示例默认使用“前后端分域”写法；如果你是同源反向代理，把示例里的 `api.example.com` 替换为你的站点域名即可。
 
-配置入口：`后台 → 支付管理 → 支付渠道`。
+## 2. 后台操作路径
 
-## 2.1 通用字段
+进入：
 
-| 字段 | 说明 |
-| --- | --- |
-| `name` | 渠道显示名（前台支付方式列表展示） |
-| `provider_type` | `official` 或 `epay` |
-| `channel_type` | 渠道类型（如 `paypal` / `stripe` / `alipay` / `wechat`） |
-| `interaction_mode` | 交互模式（如 `qr`、`redirect`、`wap`、`page`） |
-| `fee_rate` | 手续费比例（0~100） |
-| `is_active` | 是否启用 |
-| `sort_order` | 排序值（越大越靠前） |
-| `config_json` | 渠道专属配置 |
+- `后台 → 支付管理 → 支付渠道 → 新建渠道`
 
-## 2.2 PayPal（official + paypal + redirect）
+每加一个渠道，记得做三件事：
 
-### 必填项
+1. 填商户参数（各支付平台给你的密钥/ID）
+2. 填回调地址（让平台把支付结果通知给你）
+3. 启用渠道并设置排序
+
+## 3. 各支付渠道怎么填
+
+### 3.1 易支付
+
+常用必填：
+
+- 网关地址（gateway_url）
+- 商户ID（merchant_id）
+- 商户密钥（v1）或私钥/平台公钥（v2）
+- 支付结果通知地址（notify_url）
+- 用户返回地址（return_url）
+
+建议：
+
+- `notify_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `return_url` 填：`https://shop.example.com/pay`
+
+### 3.2 PayPal
+
+常用必填：
 
 - `client_id`
 - `client_secret`
-- `base_url`
+- `base_url`（沙箱或正式环境）
 - `return_url`
 - `cancel_url`
 
-### 建议项
+建议：
 
-- `webhook_id`（强烈建议，开启 Webhook 签名校验）
-- `brand_name`
-- `locale`
+- `return_url` 和 `cancel_url` 都填：`https://shop.example.com/pay`
+- `webhook_id` 建议填写（用于校验）
 
-### 示例 `config_json`
+### 3.3 Stripe
 
-```json
-{
-  "client_id": "YOUR_PAYPAL_CLIENT_ID",
-  "client_secret": "YOUR_PAYPAL_CLIENT_SECRET",
-  "base_url": "https://api-m.sandbox.paypal.com",
-  "return_url": "https://shop.example.com/pay",
-  "cancel_url": "https://shop.example.com/pay",
-  "webhook_id": "YOUR_WEBHOOK_ID"
-}
-```
-
-## 2.3 Stripe（official + stripe + redirect）
-
-### 必填项
+常用必填：
 
 - `secret_key`
 - `webhook_secret`
 - `success_url`
 - `cancel_url`
 - `api_base_url`
-- `payment_method_types`（至少 1 个，默认 `card`）
 
-### 示例 `config_json`
+建议：
 
-```json
-{
-  "secret_key": "sk_test_xxx",
-  "publishable_key": "pk_test_xxx",
-  "webhook_secret": "whsec_xxx",
-  "success_url": "https://shop.example.com/pay",
-  "cancel_url": "https://shop.example.com/pay",
-  "api_base_url": "https://api.stripe.com",
-  "payment_method_types": ["card"]
-}
-```
+- `success_url` 与 `cancel_url` 都填：`https://shop.example.com/pay`
 
-## 2.4 支付宝（official + alipay）
+### 3.4 支付宝
 
-### 必填项
+常用必填：
 
 - `app_id`
-- `private_key`
-- `alipay_public_key`
-- `gateway_url`
-- `notify_url`
-- `sign_type`（`RSA2` / `RSA`，推荐 `RSA2`）
+- 应用私钥（private_key）
+- 支付宝公钥（alipay_public_key）
+- 网关地址（gateway_url）
+- 支付结果通知地址（notify_url）
 
-### 条件必填
+建议：
 
-- 当 `interaction_mode` 为 `wap` 或 `page`：`return_url` 必填
-- 当 `interaction_mode` 为 `qr`（当面付）：`return_url` 可空（建议仍配置）
+- `notify_url` 填：`https://api.example.com/api/v1/payments/callback`
+- 若你使用手机网站/电脑网站支付，也要填写 `return_url`：`https://shop.example.com/pay`
 
-### 示例 `config_json`
+### 3.5 微信支付
 
-```json
-{
-  "app_id": "YOUR_APP_ID",
-  "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
-  "alipay_public_key": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----",
-  "gateway_url": "https://openapi.alipay.com/gateway.do",
-  "notify_url": "https://api.example.com/api/v1/payments/callback",
-  "return_url": "https://shop.example.com/pay",
-  "sign_type": "RSA2"
-}
-```
-
-## 2.5 微信支付（official + wechat）
-
-### 必填项
+常用必填：
 
 - `appid`
 - `mchid`
-- `merchant_serial_no`
-- `merchant_private_key`
-- `api_v3_key`（必须 32 位）
-- `notify_url`
+- 商户证书序列号（merchant_serial_no）
+- 商户私钥（merchant_private_key）
+- `api_v3_key`
+- 支付结果通知地址（notify_url）
 
-### 条件必填
+建议：
 
-- 当 `interaction_mode = redirect`（H5 支付）：`h5_redirect_url` 必填
-- 当 `interaction_mode = qr`（Native）：`h5_redirect_url` 可空
+- `notify_url` 填：`https://api.example.com/api/v1/payments/callback?channel_id=你的渠道ID`
+- 如果是 H5 支付，请再填 `h5_redirect_url`：`https://shop.example.com/pay`
 
-### 可选项
+### 3.6 TokenPay
 
-- `h5_type`：`WAP` / `IOS` / `ANDROID`（默认 `WAP`）
-- `h5_wap_url`
-- `h5_wap_name`
+常用必填：
 
-### 示例 `config_json`
+- 网关地址（gateway_url）
+- 回调签名密钥（notify_secret）
+- 支付结果通知地址（notify_url）
 
-```json
-{
-  "appid": "wx1234567890",
-  "mchid": "1900000109",
-  "merchant_serial_no": "4A3B2C1D...",
-  "merchant_private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
-  "api_v3_key": "32chars_api_v3_key_xxxxxxxxxxxx",
-  "notify_url": "https://api.example.com/api/v1/payments/callback?channel_id=12",
-  "h5_redirect_url": "https://shop.example.com/pay",
-  "h5_type": "WAP",
-  "h5_wap_url": "https://shop.example.com",
-  "h5_wap_name": "Dujiao-Next"
-}
-```
+常用选填：
 
-## 2.6 BEpusdt（usdt-trc20 / usdc-trc20 / trx）
+- 支付币种（currency，默认 USDT）
+- 支付完成回跳地址（redirect_url）
+- 法币展示币种（base_currency，默认 CNY）
 
-### 必填项
+建议：
 
-- `gateway_url`：BEpusdt 网关地址
-- `auth_token`：BEpusdt API Token
-- `notify_url`：异步回调地址
-- `return_url`：支付成功跳转地址
+- `notify_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `redirect_url` 填：`https://shop.example.com/pay`
+- 支持币种请参考官方文档：<https://github.com/LightCountry/TokenPay/blob/master/Wiki/docs.md>
 
-### 可选项
+### 3.7 BEpusdt
 
-- `fiat`：法币类型，默认 `CNY`（支持 `CNY` / `USD`）
-- `trade_type`：交易类型（会根据 `channel_type` 自动设置，通常无需手动配置）
+常用必填：
 
-### 示例 `config_json`
+- 网关地址（gateway_url）
+- API Token（auth_token）
+- 支付结果通知地址（notify_url）
+- 支付成功回跳地址（return_url）
 
-```json
-{
-  "gateway_url": "https://usdt.example.com",
-  "auth_token": "your_bepusdt_api_token",
-  "fiat": "CNY",
-  "notify_url": "https://api.example.com/api/v1/payments/callback",
-  "return_url": "https://shop.example.com/pay"
-}
-```
+常用选填：
 
-### 支付方式说明
+- 交易类型（trade_type）
+- 法币类型（fiat，常用 CNY / USD）
 
-BEpusdt 支持三种加密货币支付方式，每种方式需要单独创建支付渠道：
+建议：
 
-| `channel_type` | 币种 | `trade_type`（自动设置） | 说明 |
-| --- | --- | --- | --- |
-| `usdt-trc20` | USDT (TRC20) | `usdt.trc20` | 波场网络 USDT |
-| `usdc-trc20` | USDC (TRC20) | `usdc.trc20` | 波场网络 USDC |
-| `trx` | TRX | `tron.trx` | 波场原生代币 |
+- `notify_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `return_url` 填：`https://shop.example.com/pay`
+- 支持币种与交易类型请参考官方文档：<https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md>
 
-**注意**：
-- `trade_type` 会根据 `channel_type` 自动设置，无需在配置中填写
-- `notify_url` 路径必须是 `/api/v1/payments/callback`
-- `return_url` 路径必须是 `/pay`（不是 `/order` 或 `/payment`）
-- 只支持 `redirect` 交互模式，统一跳转到 BEpusdt 收银台页面
+## 4. 回调与 Webhook 一张表看懂
 
-### 支付流程
+### 4.1 通用回调（这几个都填同一个地址）
 
-1. 用户选择 BEpusdt 支付方式
-2. 系统创建支付订单并跳转到 BEpusdt 收银台
-3. 用户在 BEpusdt 收银台完成支付（扫码或转账）
-4. 支付成功后，BEpusdt 发送异步回调通知
-5. 用户自动跳转回商城订单详情页
+适用：
 
-## 3. 回调地址配置与 Webhook 填写
+- 支付宝
+- 微信支付
+- 易支付
+- TokenPay
+- BEpusdt
 
-假设你的 API 对外地址是 `https://api.example.com`，则 API 回调基址为：
+填写地址：
 
-- `https://api.example.com/api/v1`
+- `POST https://api.example.com/api/v1/payments/callback`
 
-## 3.1 通用回调入口（支付宝 / 微信 / 易支付 / BEpusdt）
+### 4.2 PayPal（单独 Webhook 地址）
 
-- 回调地址：`POST https://api.example.com/api/v1/payments/callback`
-- 支持 `GET` 仅用于兼容和调试，不建议支付平台生产回调用 GET。
+填写地址：
 
-建议填写：
-
-- 支付宝 `notify_url`：`https://api.example.com/api/v1/payments/callback`
-- 微信 `notify_url`：`https://api.example.com/api/v1/payments/callback?channel_id=你的渠道ID`
-- 易支付 `notify_url`：`https://api.example.com/api/v1/payments/callback`
-- BEpusdt `notify_url`：`https://api.example.com/api/v1/payments/callback`
-
-## 3.2 PayPal Webhook
-
-- Webhook 地址：`POST https://api.example.com/api/v1/payments/webhook/paypal?channel_id=你的渠道ID`
-- `channel_id` 在当前实现中是必填（后端会校验 query 参数）。
-
-后台配置联动：
-
-- PayPal 控制台创建 Webhook 后，复制 `Webhook ID` 填到渠道 `webhook_id` 字段。
-- 若 `webhook_id` 为空，后端不会执行 PayPal Webhook 签名校验。
-
-建议订阅事件（覆盖成功/失败/处理中）：
-
-- `CHECKOUT.ORDER.COMPLETED`
-- `CHECKOUT.ORDER.APPROVED`
-- `CHECKOUT.ORDER.DENIED`
-- `PAYMENT.CAPTURE.COMPLETED`
-- `PAYMENT.CAPTURE.PENDING`
-- `PAYMENT.CAPTURE.DENIED`
-- `PAYMENT.CAPTURE.DECLINED`
-- `PAYMENT.CAPTURE.FAILED`
-
-## 3.3 Stripe Webhook
-
-- Webhook 地址：`POST https://api.example.com/api/v1/payments/webhook/stripe?channel_id=你的渠道ID`
-- `channel_id` 非强制，但**强烈建议填写**（多 Stripe 渠道时可避免匹配歧义）。
-
-后台配置联动：
-
-- Stripe 控制台创建 Endpoint 后，复制 `Signing secret` 到 `webhook_secret`。
-
-建议订阅事件：
-
-- `checkout.session.completed`
-- `checkout.session.async_payment_succeeded`
-- `checkout.session.async_payment_failed`
-- `checkout.session.expired`
-- `payment_intent.succeeded`
-- `payment_intent.processing`
-- `payment_intent.payment_failed`
-- `payment_intent.canceled`
-
-## 3.4 前台回跳地址建议（return/success/cancel）
-
-推荐统一填前台支付页：
-
-- `https://shop.example.com/pay`
+- `POST https://api.example.com/api/v1/payments/webhook/paypal?channel_id=你的渠道ID`
 
 说明：
 
-- 官方渠道（PayPal / Stripe / Alipay / WeChat H5）创建支付时，后端会自动追加 `order_no` 等查询参数。
-- 因此前台无需手工拼接订单号，直接配置 `/pay` 即可。
+- `channel_id` 在当前实现中必须带上。
 
-## 4. 注意事项
+### 4.3 Stripe（单独 Webhook 地址）
 
-1. **币种注意**
-   - 官方支付宝与微信在当前实现下使用人民币（`CNY`）。
-   - 这两个渠道请按人民币场景配置，不要依赖外币。
+填写地址：
 
-2. **多渠道注意**
-   - 同一支付提供方存在多个启用渠道时，Webhook URL 建议带 `channel_id`。
-   - 特别是 PayPal，`channel_id` 未传会直接参数错误。
+- `POST https://api.example.com/api/v1/payments/webhook/stripe?channel_id=你的渠道ID`
 
-3. **微信私钥格式注意**
-   - `merchant_private_key` 支持 PEM 文本与 `\n` 转义格式。
-   - 常见报错 `pem decode failed` 多为密钥内容不完整或被错误裁剪。
+说明：
 
-4. **回调可达性**
-   - 支付平台必须能公网访问你的 API 回调地址。
-   - 生产环境建议全链路 HTTPS。
+- `channel_id` 建议带上，多个 Stripe 渠道时更稳妥。
 
-5. **幂等与重复通知**
-   - 支付平台可能重复回调，后端已做支付状态幂等处理。
-   - 仍建议你在平台侧保持标准重试策略，不要自定义异常重放逻辑。
+## 5. 上线前 5 分钟自检
 
-6. **联调优先级**
-   - 先验证"下单成功返回支付链接/二维码"。
-   - 再验证"异步回调能更新支付状态"。
-   - 最后验证"前台 `/pay` 回跳后自动完成支付状态捕获（PayPal/Stripe）"。
+按这个顺序测一次：
+
+1. 前台下单，确认能拉起支付页面/二维码
+2. 完成支付，确认订单状态自动更新为“已支付”
+3. 支付完成后，确认能回到 `https://shop.example.com/pay`
+4. 后台支付记录里，确认该笔订单有对应支付流水
+
+## 6. 常见问题
+
+### Q1：用户显示支付成功，但后台订单没变
+
+优先检查：
+
+- 回调地址是否填错域名/路径
+- API 域名是否可以被公网访问
+- 支付平台后台是否有回调失败记录
+
+### Q2：支付完成后没有回到前台支付页
+
+优先检查：
+
+- `return_url` / `success_url` / `cancel_url` / `redirect_url` 是否统一填成 `/pay`
+
+### Q3：同一个支付方式配了多个渠道，结果串单
+
+优先处理：
+
+- PayPal、Stripe 的 Webhook 地址都带上 `channel_id`
+- 后台只保留你正在使用的渠道，避免重复启用
