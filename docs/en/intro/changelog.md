@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.0.7-beta] - 2026-02-28
+
+### Update Details:
+- Added an affiliate program: users can enable an affiliate ID, with click attribution, commission accrual, and withdrawal flow support.
+- Expanded payment channels: added TokenPay and improved Bepusdt configuration for more flexible payment integration.
+- Improved inventory deduction and sold-out state handling: stock and order status linkage is now more accurate across admin and storefront.
+- Optimized payment page and checkout payment flow: the payment steps are clearer and user feedback is more intuitive.
+- Improved initial admin setup flow: first-time deployment now has more stable and compatible administrator initialization.
+
 ## [v0.0.6-beta] - 2026-02-27
 
 ### Update Details:
