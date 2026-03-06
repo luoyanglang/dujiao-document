@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.0.8-beta] - 2026-03-06
+
+### Update Details:
+- Added site integration capabilities with connection management, product mapping, and procurement flow for smoother cross-site operations.
+- Optimized the online payment flow so checkout steps are smoother and key feedback is clearer.
+- Improved multilingual product label display consistency across both storefront and admin panels.
+- Improved scheduled task stability to make background processing more reliable in edge cases.
+- Refined multiple frontend and admin interaction details to reduce common flow interruptions and error prompts.
+
 ## [v0.0.7-beta] - 2026-02-28
 
 ### Update Details:
