@@ -28,8 +28,8 @@ Any of the following systems is recommended:
 
 ## 2. Recommended Production Specs
 
-- CPU: 2 cores or above
-- RAM: 4 GB or above
+- CPU: 1 core or above
+- RAM: 1 GB or above
 - Disk: 20 GB or above (including logs, uploads, and database)
 - Network: outbound access to payment gateways and mail services
 
