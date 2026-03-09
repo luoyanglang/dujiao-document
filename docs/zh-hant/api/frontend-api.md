@@ -4,7 +4,7 @@ outline: deep
 
 # User 前臺 API 文檔
 
-> 更新時間：2026-02-27
+> 更新時間：2026-03-09
 
 本文檔覆蓋 `user/src/api/index.ts` 當前全部前臺 API，字段定義以以下實現為準：
 
@@ -21,21 +21,52 @@ outline: deep
 
 ---
 
-## 0. v0.0.3-beta API 變更（2026-02-22）
+## 0. API 變更日誌
 
-### 0.1 幣種統一策略
+### 0.0 活動價系統改進：階梯規則 + 前端展示優化（2026-03-09）
+
+#### 新增字段
+
+- `PublicProduct` 新增 `promotion_rules` 字段（類型 `PromotionRule[]`），返回該商品所有生效中的活動規則。
+- 即使當前 SKU 單價未滿足活動門檻，該字段也會返回資料，便於前端展示「多買可享折扣」等活動提示。
+
+#### 階梯活動規則
+
+- 同一商品支援配置多條活動規則（不同 `min_amount` 門檻），形成階梯折扣。
+- 後端按購買小計（`單價 × 數量`）從高到低匹配門檻，取滿足條件的最高檔規則計算折扣。
+- 範例：
+  - 規則 A：`min_amount=50`，優惠 1%
+  - 規則 B：`min_amount=150`，優惠 2%
+  - 購買金額 49 → 無折扣；100 → 匹配規則 A（1%）；200 → 匹配規則 B（2%）
+- 單條規則場景行為不變，無破壞性變更。
+
+#### 活動類型說明
+
+| type | 含義 | 計算方式 |
+| --- | --- | --- |
+| `percent` | 百分比折扣 | 每件單價 = 原價 × (100 - value) / 100 |
+| `fixed` | 固定金額減免 | 每件單價 = 原價 - value |
+| `special_price` | 直降特價 | 每件單價 = value |
+
+> **注意：** 所有折扣均作用於**單件商品價格**，而非訂單總金額。`min_amount` 是購買小計門檻（`單價 × 數量`），達到門檻後每件商品享受對應折扣。
+
+---
+
+### 0.1 v0.0.3-beta API 變更（2026-02-22）
+
+#### 幣種統一策略
 
 - 全站僅允許一種幣種，配置來源：`site_config.currency`（預設 `CNY`）。
 - 幣種值必須為 3 位大寫代碼（如 `CNY`、`USD`），非法值會自動歸一化為 `CNY`。
 - 訂單預覽、訂單、支付、錢包等金額相關介面統一使用該站點幣種。
 
-### 0.2 破壞性字段變更
+#### 破壞性字段變更
 
 - `PublicProduct.price_currency` 已移除。
 - `PublicProduct.promotion_price_currency` 已移除。
 - 前端若仍讀取上述字段，請改為讀取 `GET /public/config` 返回的 `currency`。
 
-### 0.3 管理後臺商品新增多 SKU 入參
+#### 管理後臺商品新增多 SKU 入參
 
 - 管理後臺商品建立/更新介面新增 `skus` 陣列，用於提交多規格價格與庫存。
 - 相容規則：
@@ -46,7 +77,7 @@ outline: deep
   - 每個 SKU 的 `price_amount > 0`；
   - 至少存在 1 個啟用中的 SKU（`is_active=true`）。
 
-### 0.4 促銷價下沉至 SKU 級別
+#### 促銷價下沉至 SKU 級別
 
 - `PublicProduct` 新增 `skus` 字段（類型 `PublicSKU[]`），每個 SKU 包含獨立的 `promotion_price_amount`。
 - 促銷活動仍以商品為維度配置，但促銷價基於每個 SKU 的原價獨立計算。
@@ -182,6 +213,7 @@ Authorization: Bearer <user_token>
 | promotion_name | string | 活動名稱（可選） |
 | promotion_type | string | 活動類型（可選） |
 | promotion_price_amount | string | 活動價金額（可選）；多 SKU 時取所有 SKU 促銷價中的最低值，用於列表頁展示 |
+| promotion_rules | PromotionRule[] | 該商品所有生效中的活動規則列表（可選）；即使當前 SKU 單價未滿足門檻也會返回，用於前端展示活動提示；詳見 [2.1.2 PromotionRule](#_2-1-2-promotionrule) |
 | skus | PublicSKU[] | SKU 列表，包含每個 SKU 的促銷價資訊；詳見 [2.1.1 PublicSKU](#_2-1-1-publicsku) |
 | manual_stock_available | number | 人工可用庫存 |
 | auto_stock_available | number | 自動可用庫存 |
@@ -213,7 +245,31 @@ Authorization: Bearer <user_token>
 | created_at | string | 創建時間 |
 | updated_at | string | 更新時間 |
 
-> **促銷價計算說明：** 促銷活動仍以商品為維度配置，但促銷價會下沉到每個 SKU 獨立計算。例如某商品配置了「8 折」促銷，99 元的 SKU 促銷價為 79.20，77 元的 SKU 促銷價為 61.60。產品級的 `promotion_price_amount` 取所有 SKU 中的最低促銷價，適用於列表頁展示。
+#### 2.1.2 PromotionRule
+
+`promotion_rules[]` 陣列中每個元素的結構如下：
+
+| 字段 | 類型 | 說明 |
+| --- | --- | --- |
+| id | number | 活動規則 ID |
+| name | string | 活動名稱 |
+| type | string | 活動類型：`percent` / `fixed` / `special_price` |
+| value | string | 活動數值（字串金額/百分比，如 `"2.00"` 或 `"5.00"`） |
+| min_amount | string | 觸發門檻金額（購買小計 = 單價 × 數量，如 `"200.00"`；`"0.00"` 表示無門檻） |
+
+> **活動類型與折扣計算：**
+>
+> | type | 含義 | 折扣計算（作用於每件單價） |
+> | --- | --- | --- |
+> | `percent` | 百分比折扣 | 單價 = 原價 × (100 - value) / 100 |
+> | `fixed` | 固定金額減免 | 單價 = 原價 - value |
+> | `special_price` | 直降特價 | 單價 = value |
+>
+> - 所有折扣均作用於**單件商品價格**，而非訂單總金額。
+> - `min_amount` 是購買小計門檻（`單價 × 數量`），達到門檻後每件商品享受對應折扣。
+> - 同一商品可配置多條不同 `min_amount` 的規則，形成階梯折扣。後端從高到低匹配，取滿足條件的最高檔。
+
+> **促銷價計算說明：** 促銷活動以商品為維度配置，促銷價下沉到每個 SKU 獨立計算。例如某商品配置了「優惠 2%」促銷，99 元的 SKU 促銷價為 97.02，77 元的 SKU 促銷價為 75.46。產品級的 `promotion_price_amount` 取所有 SKU 中的最低促銷價，適用於列表頁展示。`promotion_rules` 返回所有生效規則（按 `min_amount` 升序），即使當前單價未滿足門檻也會返回，便於前端展示活動提示。
 
 ### 2.2 Post
 

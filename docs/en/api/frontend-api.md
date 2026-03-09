@@ -4,7 +4,7 @@ outline: deep
 
 # User Frontend API Documentation
 
-> Last Updated: 2026-02-27
+> Last Updated: 2026-03-09
 
 This document covers all current frontend APIs in `user/src/api/index.ts`, with field definitions based on the following implementations:
 
@@ -21,21 +21,52 @@ This document covers all current frontend APIs in `user/src/api/index.ts`, with 
 
 ---
 
-## 0. v0.0.3-beta API Changes (2026-02-22)
+## 0. API Changelog
 
-### 0.1 Unified Currency Strategy
+### 0.0 Promotion System Enhancement: Tiered Rules + Frontend Display (2026-03-09)
+
+#### New Fields
+
+- `PublicProduct` now includes a `promotion_rules` field (type `PromotionRule[]`), returning all active promotion rules for the product.
+- This field is populated even when the current SKU unit price does not meet the rule threshold, allowing the frontend to display "buy more to get a discount" hints.
+
+#### Tiered Promotion Rules
+
+- A single product can have multiple promotion rules with different `min_amount` thresholds, creating tiered discounts.
+- The backend matches from highest to lowest threshold against the purchase subtotal (`unit price × quantity`), applying the highest tier that qualifies.
+- Example:
+  - Rule A: `min_amount=50`, 1% off
+  - Rule B: `min_amount=150`, 2% off
+  - Subtotal 49 → no discount; 100 → Rule A (1% off); 200 → Rule B (2% off)
+- Single-rule scenarios behave identically to before — no breaking changes.
+
+#### Promotion Types
+
+| type | Meaning | Calculation (per item) |
+| --- | --- | --- |
+| `percent` | Percentage discount | unit price = original × (100 - value) / 100 |
+| `fixed` | Fixed amount reduction | unit price = original - value |
+| `special_price` | Direct price override | unit price = value |
+
+> **Note:** All discounts apply to the **per-item unit price**, not the order total. `min_amount` is the subtotal threshold (`unit price × quantity`); once met, each item receives the corresponding discount.
+
+---
+
+### 0.1 v0.0.3-beta API Changes (2026-02-22)
+
+#### Unified Currency Strategy
 
 - The site now supports only one currency, sourced from `site_config.currency` (default: `CNY`).
 - Currency must be a 3-letter uppercase code (e.g. `CNY`, `USD`); invalid values are normalized to `CNY`.
 - Amount-related APIs (order preview, orders, payments, wallet) now consistently use this site currency.
 
-### 0.2 Breaking Field Changes
+#### Breaking Field Changes
 
 - `PublicProduct.price_currency` has been removed.
 - `PublicProduct.promotion_price_currency` has been removed.
 - If your frontend still reads these fields, switch to `currency` from `GET /public/config`.
 
-### 0.3 Multi-SKU Input Added for Admin Product APIs
+#### Multi-SKU Input Added for Admin Product APIs
 
 - Admin product create/update APIs now support a `skus` array for multi-variant pricing and stock.
 - Compatibility behavior:
@@ -46,7 +77,7 @@ This document covers all current frontend APIs in `user/src/api/index.ts`, with 
   - each SKU `price_amount` must be greater than 0;
   - at least one active SKU (`is_active=true`) must exist.
 
-### 0.4 Promotion Price Extended to SKU Level
+#### Promotion Price Extended to SKU Level
 
 - `PublicProduct` now includes a `skus` field (type `PublicSKU[]`), each SKU containing its own `promotion_price_amount`.
 - Promotions are still configured at the product level, but promotion prices are calculated independently based on each SKU's original price.
@@ -179,6 +210,7 @@ Authorization: Bearer <user_token>
 | promotion_name | string | Promotion name (optional) |
 | promotion_type | string | Promotion type (optional) |
 | promotion_price_amount | string | Promotion price amount (optional); for multi-SKU products, this is the lowest promotion price among all SKUs, used for list page display |
+| promotion_rules | PromotionRule[] | All active promotion rules for this product (optional); returned even when current SKU price does not meet the threshold, for frontend promotion hints; see [2.1.2 PromotionRule](#_2-1-2-promotionrule) |
 | skus | PublicSKU[] | SKU list with per-SKU promotion price info; see [2.1.1 PublicSKU](#_2-1-1-publicsku) |
 | manual_stock_available | number | Manually available stock |
 | auto_stock_available | number | Automatically available stock |
@@ -210,7 +242,31 @@ Each element in the `skus[]` array has the following structure:
 | created_at | string | Creation time |
 | updated_at | string | Update time |
 
-> **Promotion price calculation:** Promotions are still configured at the product level, but promotion prices are calculated independently for each SKU. For example, if a product has a "20% off" promotion, a 99.00 SKU will have a promotion price of 79.20, while a 77.00 SKU will have a promotion price of 61.60. The product-level `promotion_price_amount` is the lowest promotion price among all SKUs, suitable for list page display.
+#### 2.1.2 PromotionRule
+
+Each element in the `promotion_rules[]` array has the following structure:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | number | Promotion rule ID |
+| name | string | Promotion name |
+| type | string | Promotion type: `percent` / `fixed` / `special_price` |
+| value | string | Promotion value (string amount/percentage, e.g., `"2.00"` or `"5.00"`) |
+| min_amount | string | Threshold amount (purchase subtotal = unit price × quantity, e.g., `"200.00"`; `"0.00"` means no threshold) |
+
+> **Promotion types and discount calculation:**
+>
+> | type | Meaning | Discount calculation (per item) |
+> | --- | --- | --- |
+> | `percent` | Percentage discount | unit price = original × (100 - value) / 100 |
+> | `fixed` | Fixed amount reduction | unit price = original - value |
+> | `special_price` | Direct price override | unit price = value |
+>
+> - All discounts apply to the **per-item unit price**, not the order total.
+> - `min_amount` is the purchase subtotal threshold (`unit price × quantity`); once met, each item receives the corresponding discount.
+> - A product can have multiple rules with different `min_amount` thresholds to create tiered discounts. The backend matches from highest to lowest, applying the best qualifying tier.
+
+> **Promotion price calculation:** Promotions are configured at the product level, with prices calculated independently for each SKU. For example, if a product has a "2% off" promotion, a 99.00 SKU will have a promotion price of 97.02, while a 77.00 SKU will have a promotion price of 75.46. The product-level `promotion_price_amount` is the lowest promotion price among all SKUs, suitable for list page display. `promotion_rules` returns all active rules (sorted by `min_amount` ascending), even when the current price does not meet the threshold, for frontend promotion hints.
 
 ### 2.2 Post
 

@@ -4,7 +4,7 @@ outline: deep
 
 # User 前台 API 文档
 
-> 更新时间：2026-02-27
+> 更新时间：2026-03-09
 
 本文档覆盖 `user/src/api/index.ts` 当前全部前台 API，字段定义以以下实现为准：
 
@@ -21,21 +21,52 @@ outline: deep
 
 ---
 
-## 0. v0.0.3-beta API 变更（2026-02-22）
+## 0. API 变更日志
 
-### 0.1 币种统一策略
+### 0.0 活动价系统改进：阶梯规则 + 前端展示优化（2026-03-09）
+
+#### 新增字段
+
+- `PublicProduct` 新增 `promotion_rules` 字段（类型 `PromotionRule[]`），返回该商品所有生效中的活动规则。
+- 即使当前 SKU 单价未满足活动门槛，该字段也会返回数据，便于前端展示"多买可享折扣"等活动提示。
+
+#### 阶梯活动规则
+
+- 同一商品支持配置多条活动规则（不同 `min_amount` 门槛），形成阶梯折扣。
+- 后端按购买小计（`单价 × 数量`）从高到低匹配门槛，取满足条件的最高档规则计算折扣。
+- 示例：
+  - 规则 A：`min_amount=50`，优惠 1%
+  - 规则 B：`min_amount=150`，优惠 2%
+  - 购买金额 49 → 无折扣；100 → 匹配规则 A（1%）；200 → 匹配规则 B（2%）
+- 单条规则场景行为不变，无破坏性变更。
+
+#### 活动类型说明
+
+| type | 含义 | 计算方式 |
+| --- | --- | --- |
+| `percent` | 百分比折扣 | 每件单价 = 原价 × (100 - value) / 100 |
+| `fixed` | 固定金额减免 | 每件单价 = 原价 - value |
+| `special_price` | 直降特价 | 每件单价 = value |
+
+> **注意：** 所有折扣均作用于**单件商品价格**，而非订单总金额。`min_amount` 是购买小计门槛（`单价 × 数量`），达到门槛后每件商品享受对应折扣。
+
+---
+
+### 0.1 v0.0.3-beta API 变更（2026-02-22）
+
+#### 币种统一策略
 
 - 全站仅允许一种币种，配置来源：`site_config.currency`（默认 `CNY`）。
 - 币种值必须是 3 位大写代码（如 `CNY`、`USD`），非法值会自动归一化为 `CNY`。
 - 订单预览、订单、支付、钱包等金额相关接口统一使用该站点币种。
 
-### 0.2 破坏性字段变更
+#### 破坏性字段变更
 
 - `PublicProduct.price_currency` 已移除。
 - `PublicProduct.promotion_price_currency` 已移除。
 - 前端若仍读取上述字段，请改为读取 `GET /public/config` 返回的 `currency`。
 
-### 0.3 管理后台商品新增多 SKU 入参
+#### 管理后台商品新增多 SKU 入参
 
 - 管理后台商品创建/更新接口新增 `skus` 数组，用于提交多规格价格与库存。
 - 兼容规则：
@@ -46,7 +77,7 @@ outline: deep
   - 每个 SKU 的 `price_amount > 0`；
   - 至少存在 1 个启用中的 SKU（`is_active=true`）。
 
-### 0.4 促销价下沉至 SKU 级别
+#### 促销价下沉至 SKU 级别
 
 - `PublicProduct` 新增 `skus` 字段（类型 `PublicSKU[]`），每个 SKU 包含独立的 `promotion_price_amount`。
 - 促销活动仍以商品为维度配置，但促销价基于每个 SKU 的原价独立计算。
@@ -182,6 +213,7 @@ Authorization: Bearer <user_token>
 | promotion_name | string | 活动名称（可选） |
 | promotion_type | string | 活动类型（可选） |
 | promotion_price_amount | string | 活动价金额（可选）；多 SKU 时取所有 SKU 促销价中的最低值，用于列表页展示 |
+| promotion_rules | PromotionRule[] | 该商品所有生效中的活动规则列表（可选）；即使当前 SKU 单价未满足门槛也会返回，用于前端展示活动提示；详见 [2.1.2 PromotionRule](#_2-1-2-promotionrule) |
 | skus | PublicSKU[] | SKU 列表，包含每个 SKU 的促销价信息；详见 [2.1.1 PublicSKU](#_2-1-1-publicsku) |
 | manual_stock_available | number | 人工可用库存 |
 | auto_stock_available | number | 自动可用库存 |
@@ -213,7 +245,31 @@ Authorization: Bearer <user_token>
 | created_at | string | 创建时间 |
 | updated_at | string | 更新时间 |
 
-> **促销价计算说明：** 促销活动仍以商品为维度配置，但促销价会下沉到每个 SKU 独立计算。例如某商品配置了"8 折"促销，99 元的 SKU 促销价为 79.20，77 元的 SKU 促销价为 61.60。产品级的 `promotion_price_amount` 取所有 SKU 中的最低促销价，适用于列表页展示。
+#### 2.1.2 PromotionRule
+
+`promotion_rules[]` 数组中每个元素的结构如下：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | number | 活动规则 ID |
+| name | string | 活动名称 |
+| type | string | 活动类型：`percent` / `fixed` / `special_price` |
+| value | string | 活动数值（字符串金额/百分比，如 `"2.00"` 或 `"5.00"`） |
+| min_amount | string | 触发门槛金额（购买小计 = 单价 × 数量，如 `"200.00"`；`"0.00"` 表示无门槛） |
+
+> **活动类型与折扣计算：**
+>
+> | type | 含义 | 折扣计算（作用于每件单价） |
+> | --- | --- | --- |
+> | `percent` | 百分比折扣 | 单价 = 原价 × (100 - value) / 100 |
+> | `fixed` | 固定金额减免 | 单价 = 原价 - value |
+> | `special_price` | 直降特价 | 单价 = value |
+>
+> - 所有折扣均作用于**单件商品价格**，而非订单总金额。
+> - `min_amount` 是购买小计门槛（`单价 × 数量`），达到门槛后每件商品享受对应折扣。
+> - 同一商品可配置多条不同 `min_amount` 的规则，形成阶梯折扣。后端从高到低匹配，取满足条件的最高档。
+
+> **促销价计算说明：** 促销活动以商品为维度配置，促销价下沉到每个 SKU 独立计算。例如某商品配置了"优惠 2%"促销，99 元的 SKU 促销价为 97.02，77 元的 SKU 促销价为 75.46。产品级的 `promotion_price_amount` 取所有 SKU 中的最低促销价，适用于列表页展示。`promotion_rules` 返回所有生效规则（按 `min_amount` 升序），即使当前单价未满足门槛也会返回，便于前端展示活动提示。
 
 ### 2.2 Post
 
