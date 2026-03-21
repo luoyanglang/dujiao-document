@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.1.3] - 2026-03-21
+
+### Update Details:
+- Added OKPay as a payment channel, giving merchants another collection option for new checkout scenarios.
+- Added a configurable exchange-rate base so site pricing and payment amount conversion are more flexible.
+- Added a configurable registration switch so admins can control storefront signup availability more easily.
+- Improved EPay redirect-mode compatibility so payment return flows work more smoothly on supported channels.
+- Improved admin mobile adaptation, product-list quick actions, and card-secret guidance for faster daily operations.
+- Unified sort ordering and improved storefront product image display for a more consistent browsing experience.
+
 ## [v0.1.2] - 2026-03-17
 
 ### Update Details:
