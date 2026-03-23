@@ -18,8 +18,8 @@
 
 ## 2. Telegram Bot 服务
 
-- 售价：`398USD` / 年
-- 说明：独立 Telegram Bot 功能授权，支持授权期内持续更新、迭代升级
+- 售价：限时早鸟价 `398USD` / 终身
+- 说明：独立 Telegram Bot 功能终身授权，支持持续更新、迭代升级
 - 详情页：[/services/telegram-bot](/services/telegram-bot)
 
 ## 3. 二次开发服务

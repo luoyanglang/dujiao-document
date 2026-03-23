@@ -8,9 +8,9 @@ Telegram Bot is an independent Dujiao-Next extension that brings your storefront
 
 ## 1. Pricing and Term
 
-- Price: `398USD` / year
-- License term: annual subscription
-- Update policy: continuous updates, feature iteration, and version upgrades are included during the active license term
+- Price: limited-time early bird `398USD` / lifetime
+- License term: lifetime license
+- Update policy: continuous updates, feature iteration, and version upgrades are included with the lifetime license
 
 ## 2. Best Fit Scenarios
 
@@ -67,8 +67,8 @@ Telegram Bot is an independent Dujiao-Next extension that brings your storefront
 
 ## 4. What Is Included
 
-- Telegram Bot feature license
-- Continuous updates during the license term
+- Telegram Bot feature lifetime license
+- Continuous updates
 - Ongoing feature iteration and version upgrades
 - Compatibility updates with the current mainline release
 

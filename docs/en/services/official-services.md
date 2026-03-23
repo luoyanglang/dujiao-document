@@ -18,8 +18,8 @@ This page describes the official technical service offerings and terms for Dujia
 
 ## 2. Telegram Bot Service
 
-- Price: `398USD` / year
-- Notes: standalone Telegram Bot feature license with continuous updates and iterative upgrades during the active term
+- Price: limited-time early bird `398USD` / lifetime
+- Notes: standalone Telegram Bot feature lifetime license with continuous updates and iterative upgrades included
 - Details: [/en/services/telegram-bot](/en/services/telegram-bot)
 
 ## 3. Custom Development Service

@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.1.4] - 2026-03-23
+
+### Update Details:
+- Added baseline Telegram Mini App support for smoother login, payment, wallet, and navigation flows inside Telegram.
+- Upgraded the notification center into a dedicated workflow for channel and template setup, delivery history review, and test sends.
+- Improved the checkout and wallet payment experience with clearer fee details, payment method display, and result feedback.
+- Streamlined API access requests, card-secret operations, and order fulfillment flows for faster daily admin work.
+- Improved weak-network loading and mobile banner behavior so storefront browsing and page transitions feel smoother on phones.
+
 ## [v0.1.3] - 2026-03-21
 
 ### Update Details:
