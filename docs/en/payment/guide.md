@@ -1,6 +1,6 @@
 # Payment Configuration and Callback Guide
 
-> Updated: 2026-02-27
+> Updated: 2026-03-28
 
 You only need two outcomes:
 
@@ -155,6 +155,53 @@ Recommended:
 - `return_url`: `https://shop.example.com/pay`
 - Supported currencies and trade types: <https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md>
 
+### 3.8 OKPay
+
+Usually required:
+
+- Gateway URL (`gateway_url`, default `https://api.okaypay.me/shop`)
+- Merchant ID (`merchant_id`)
+- Merchant token (`merchant_token`)
+- Callback URL (`callback_url`)
+- Return URL (`return_url`)
+
+Common optional fields:
+
+- Payment coin (`coin`, supports `USDT` or `TRX`, default USDT)
+- Exchange rate (`exchange_rate`, default `1`)
+- Merchant display name (`display_name`)
+
+Recommended:
+
+- `callback_url`: `https://api.example.com/api/v1/payments/callback`
+- `return_url`: `https://shop.example.com/pay`
+
+---
+
+## 3.9 Fee Configuration
+
+Each payment channel can have its own fee settings for calculating the actual amount received:
+
+| Field | Description |
+|-------|-------------|
+| Fee Rate (`fee_rate`) | Percentage fee, e.g., `2.00` means 2% |
+| Fixed Fee (`fixed_fee`) | Fixed amount deducted per transaction |
+
+Fees are used only for admin statistics and profit calculation. They do **not** increase the amount the customer pays.
+
+---
+
+## 3.10 Interaction Modes
+
+When creating a payment channel, you must select an interaction mode that determines the customer's payment experience:
+
+| Mode | Identifier | Description |
+|------|------------|-------------|
+| QR Code | `qr` | Generates a payment QR code for the customer to scan (suitable for WeChat Pay / Alipay, etc.) |
+| Redirect | `redirect` | Redirects to the payment platform page to complete payment (suitable for PayPal / Stripe, etc.) |
+
+> The same payment type can have multiple channels using different interaction modes. For example, Alipay can be configured with both QR code and redirect modes simultaneously.
+
 ## 4. Callback & Webhook (Easy Reference)
 
 ### 4.1 Shared Callback URL (use the same URL)
@@ -166,6 +213,7 @@ Applies to:
 - EPay
 - TokenPay
 - BEpusdt
+- OKPay
 
 Use:
 

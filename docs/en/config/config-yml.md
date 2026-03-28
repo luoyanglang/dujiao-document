@@ -1,6 +1,6 @@
 # `config.yml` Detailed Explanation and Recommended Configuration
 
-> Last Updated: 2026-02-27
+> Last Updated: 2026-03-28
 
 ## 1. Configuration Loading Rules
 
@@ -148,64 +148,74 @@ Common incorrect combinations:
 
 ## 5. Explanation of Group Fields
 
+## 5.0 `app`
+
+| Field | Type | Default | Description | Recommendation |
+| --- | --- | --- | --- | --- |
+| `secret_key` | string | `change-me-32-byte-secret-key!!` | AES-256 encryption key for encrypting payment keys, Bot Tokens and other sensitive data | **Must be changed to a random 32-byte string** |
+
+> This key must not be changed after deployment, otherwise previously encrypted data will become unreadable.
+
 ## 5.1 `server`
 
-| Field | Type | Description | Recommendation |
-| --- | --- | --- | --- |
-| `host` | string | Listening address | `0.0.0.0` |
-| `port` | string | Service port | `8080` |
-| `mode` | string | Running mode: `debug`/`release` | Use `release` for production |
+| Field | Type | Default | Description | Recommendation |
+| --- | --- | --- | --- | --- |
+| `host` | string | `0.0.0.0` | Listening address | `0.0.0.0` |
+| `port` | string | `8080` | Service port | `8080` |
+| `mode` | string | `debug` | Running mode: `debug`/`release` | Use `release` for production |
 
 ## 5.2 `log`
 
-| Field | Type | Description | Recommendation |
-| --- | --- | --- | --- |
-| `dir` | string | Log directory; if empty, `logs` in the running directory is used | Explicitly specify in production |
-| `filename` | string | Log file name | `app.log` |
-| `max_size_mb` | int | Maximum size per file in MB | `100` |
-| `max_backups` | int | Number of files to retain | `7~14` |
-| `max_age_days` | int | Retention period in days | `30` |
-| `compress` | bool | Whether to compress archives | `true` |
+| Field | Type | Default | Description | Recommendation |
+| --- | --- | --- | --- | --- |
+| `dir` | string | `""` | Log directory; if empty, `logs` in the running directory is used | Explicitly specify in production |
+| `filename` | string | `app.log` | Log file name | `app.log` |
+| `max_size_mb` | int | `100` | Maximum size per file in MB | `100` |
+| `max_backups` | int | `7` | Number of files to retain | `7~14` |
+| `max_age_days` | int | `30` | Retention period in days | `30` |
+| `compress` | bool | `true` | Whether to compress archives | `true` |
 
 ## 5.3 `database`
 
-| Field | Type | Description | Recommendation |
-| --- | --- | --- | --- |
-| `driver` | string | `sqlite` or `postgres` | Use `postgres` in production |
-| `dsn` | string | Database connection string | Configure according to environment |
-| `pool.max_open_conns` | int | Maximum open connections | SQLite=1; Postgres=20~100 |
-| `pool.max_idle_conns` | int | Maximum idle connections | 5~20 or 20%~40% of open connections |
-| `pool.conn_max_lifetime_seconds` | int | Maximum connection lifetime (seconds, 0=no limit) | `900~3600` |
-| `pool.conn_max_idle_time_seconds` | int | Maximum idle connection lifetime (seconds, 0=no limit) | `300~1200` |
+| Field | Type | Default | Description | Recommendation |
+| --- | --- | --- | --- | --- |
+| `driver` | string | `sqlite` | `sqlite` or `postgres` | Use `postgres` in production |
+| `dsn` | string | `./db/dujiao.db` | Database connection string | Configure according to environment |
+| `pool.max_open_conns` | int | `1` | Maximum open connections | SQLite=1; Postgres=20~100 |
+| `pool.max_idle_conns` | int | `1` | Maximum idle connections | 5~20 or 20%~40% of open connections |
+| `pool.conn_max_lifetime_seconds` | int | `0` | Maximum connection lifetime (seconds, 0=no limit) | `900~3600` |
+| `pool.conn_max_idle_time_seconds` | int | `0` | Maximum idle connection lifetime (seconds, 0=no limit) | `300~1200` |
 
 ## 5.4 `jwt` / `user_jwt`
 
-| Field | Type | Description | Recommended |
-| --- | --- | --- | --- |
-| `secret` | string | Signing key | At least a 32-character random string |
-| `expire_hours` | int | Token expiration time (hours) | `24` |
-| `remember_me_expire_hours` | int | Used only by `user_jwt`, remember me expiration time | `168` |
+| Field | Type | Default | Description | Recommended |
+| --- | --- | --- | --- | --- |
+| `secret` | string | `change-me-in-production` | Signing key | At least a 32-character random string |
+| `expire_hours` | int | `24` | Token expiration time (hours) | `24` |
+| `remember_me_expire_hours` | int | `168` | Used only by `user_jwt`, remember me expiration time | `168` (7 days) |
 
 ## 5.5 `redis`
 
-| Field | Type | Description | Recommended |
-| --- | --- | --- | --- |
-| `enabled` | bool | Whether to enable Redis | Recommended `true` in production |
-| `host`/`port` | string/int | Redis address | Set according to environment |
-| `password` | string | Redis password | Must be set in production |
-| `db` | int | DB index | `0` |
-| `prefix` | string | Key prefix | `dj` or custom |
+| Field | Type | Default | Description | Recommended |
+| --- | --- | --- | --- | --- |
+| `enabled` | bool | `true` | Whether to enable Redis | Recommended `true` in production |
+| `host` | string | `127.0.0.1` | Redis address | Set according to environment |
+| `port` | int | `6379` | Redis port | `6379` |
+| `password` | string | `""` | Redis password | Must be set in production |
+| `db` | int | `0` | DB index | `0` |
+| `prefix` | string | `dj` | Key prefix | `dj` or custom |
 
 ## 5.6 `queue`
 
-| Field | Type | Description | Recommended |
-| --- | --- | --- | --- |
-| `enabled` | bool | Whether to enable async queue | Recommended `true` |
-| `host`/`port` | string/int | Queue Redis address | Can share but use a different DB from `redis` |
-| `password` | string | Redis password | Must be set in production |
-| `db` | int | Queue DB index | Default `1` |
-| `concurrency` | int | Worker concurrency | 5~20 |
-| `queues` | map[string]int | Queue weights | `default:10`, `critical:5` |
+| Field | Type | Default | Description | Recommended |
+| --- | --- | --- | --- | --- |
+| `enabled` | bool | `true` | Whether to enable async queue | Recommended `true` |
+| `host` | string | `127.0.0.1` | Queue Redis address | Can share but use a different DB from `redis` |
+| `port` | int | `6379` | Queue Redis port | `6379` |
+| `password` | string | `""` | Redis password | Must be set in production |
+| `db` | int | `1` | Queue DB index | `1` |
+| `concurrency` | int | `10` | Worker concurrency | 5~20 |
+| `queues` | map | `default:10, critical:5` | Queue names and weights | Adjust as needed |
 
 Note: If `queue.enabled=true` but Redis is unreachable, asynchronous tasks (such as emails) may fail or pile up.
 
@@ -239,12 +249,16 @@ Additional notes:
 
 ## 5.9 `security`
 
-| Field | Type | Description | Recommended |
-| --- | --- | --- | --- |
-| `login_rate_limit.window_seconds` | int | Rate limit window (seconds) | `300` |
-| `login_rate_limit.max_attempts` | int | Maximum number of attempts | `5` |
-| `login_rate_limit.block_seconds` | int | Block duration when limit exceeded (seconds) | `900` |
-| `password_policy.*` | mixed | Password complexity policy | Increase according to company requirements |
+| Field | Type | Default | Description | Recommended |
+| --- | --- | --- | --- | --- |
+| `login_rate_limit.window_seconds` | int | `300` | Rate limit detection window (seconds) | `300` |
+| `login_rate_limit.max_attempts` | int | `5` | Maximum failed attempts within window | `5` |
+| `login_rate_limit.block_seconds` | int | `900` | Block duration when limit exceeded (seconds) | `900` |
+| `password_policy.min_length` | int | `8` | Minimum password length | `8` or higher |
+| `password_policy.require_upper` | bool | `true` | Whether to require uppercase letters | `true` |
+| `password_policy.require_lower` | bool | `true` | Whether to require lowercase letters | `true` |
+| `password_policy.require_number` | bool | `true` | Whether to require digits | `true` |
+| `password_policy.require_special` | bool | `false` | Whether to require special characters | Enable as needed |
 
 ## 5.10 `email`
 
@@ -272,9 +286,9 @@ Additional notes:
 
 ## 5.12 `order`
 
-| Field | Type | Description | Recommended |
-| --- | --- | --- | --- |
-| `payment_expire_minutes` | int | Timeout in minutes for unpaid orders | `15~30` |
+| Field | Type | Default | Description | Recommended |
+| --- | --- | --- | --- | --- |
+| `payment_expire_minutes` | int | `15` | Timeout in minutes for unpaid orders | `15~30` |
 
 Additional notes:
 

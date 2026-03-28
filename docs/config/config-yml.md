@@ -1,6 +1,6 @@
 # `config.yml` 详细解释与推荐配置
 
-> 更新时间：2026-02-27
+> 更新时间：2026-03-28
 
 ## 1. 配置加载规则
 
@@ -151,64 +151,74 @@ database:
 
 ## 5. 分组字段说明
 
+## 5.0 `app`
+
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `secret_key` | string | `change-me-32-byte-secret-key!!` | AES-256 加密密钥，用于加密支付密钥、Bot Token 等敏感数据 | **必须修改为随机 32 字节字符串** |
+
+> 此密钥部署后不可随意更换，否则已加密数据将无法解密。
+
 ## 5.1 `server`
 
-| 字段 | 类型 | 说明 | 推荐 |
-| --- | --- | --- | --- |
-| `host` | string | 监听地址 | `0.0.0.0` |
-| `port` | string | 服务端口 | `8080` |
-| `mode` | string | 运行模式：`debug`/`release` | 生产用 `release` |
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `host` | string | `0.0.0.0` | 监听地址 | `0.0.0.0` |
+| `port` | string | `8080` | 服务端口 | `8080` |
+| `mode` | string | `debug` | 运行模式：`debug`/`release` | 生产用 `release` |
 
 ## 5.2 `log`
 
-| 字段 | 类型 | 说明 | 推荐 |
-| --- | --- | --- | --- |
-| `dir` | string | 日志目录；空字符串时使用运行目录下 `logs` | 生产建议显式指定 |
-| `filename` | string | 日志文件名 | `app.log` |
-| `max_size_mb` | int | 单文件最大 MB | `100` |
-| `max_backups` | int | 保留文件数 | `7~14` |
-| `max_age_days` | int | 保留天数 | `30` |
-| `compress` | bool | 是否压缩归档 | `true` |
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `dir` | string | `""` | 日志目录；空字符串时使用运行目录下 `logs` | 生产建议显式指定 |
+| `filename` | string | `app.log` | 日志文件名 | `app.log` |
+| `max_size_mb` | int | `100` | 单文件最大 MB | `100` |
+| `max_backups` | int | `7` | 保留文件数 | `7~14` |
+| `max_age_days` | int | `30` | 保留天数 | `30` |
+| `compress` | bool | `true` | 是否压缩归档 | `true` |
 
 ## 5.3 `database`
 
-| 字段 | 类型 | 说明 | 推荐 |
-| --- | --- | --- | --- |
-| `driver` | string | `sqlite` 或 `postgres` | 生产建议 `postgres` |
-| `dsn` | string | 数据库连接串 | 按环境配置 |
-| `pool.max_open_conns` | int | 最大打开连接数 | SQLite=1；Postgres=20~100 |
-| `pool.max_idle_conns` | int | 最大空闲连接数 | 5~20 或 open 的 20%~40% |
-| `pool.conn_max_lifetime_seconds` | int | 连接最大生命周期（秒，0=不限制） | `900~3600` |
-| `pool.conn_max_idle_time_seconds` | int | 空闲连接最大生命周期（秒，0=不限制） | `300~1200` |
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `driver` | string | `sqlite` | `sqlite` 或 `postgres` | 生产建议 `postgres` |
+| `dsn` | string | `./db/dujiao.db` | 数据库连接串 | 按环境配置 |
+| `pool.max_open_conns` | int | `1` | 最大打开连接数 | SQLite=1；Postgres=20~100 |
+| `pool.max_idle_conns` | int | `1` | 最大空闲连接数 | 5~20 或 open 的 20%~40% |
+| `pool.conn_max_lifetime_seconds` | int | `0` | 连接最大生命周期（秒，0=不限制） | `900~3600` |
+| `pool.conn_max_idle_time_seconds` | int | `0` | 空闲连接最大生命周期（秒，0=不限制） | `300~1200` |
 
 ## 5.4 `jwt` / `user_jwt`
 
-| 字段 | 类型 | 说明 | 推荐 |
-| --- | --- | --- | --- |
-| `secret` | string | 签名密钥 | 至少 32 位随机字符串 |
-| `expire_hours` | int | Token 过期时间（小时） | `24` |
-| `remember_me_expire_hours` | int | 仅 `user_jwt` 使用，记住我过期时间 | `168` |
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `secret` | string | `change-me-in-production` | 签名密钥 | 至少 32 位随机字符串 |
+| `expire_hours` | int | `24` | Token 过期时间（小时） | `24` |
+| `remember_me_expire_hours` | int | `168` | 仅 `user_jwt` 使用，记住我过期时间 | `168`（7 天） |
 
 ## 5.5 `redis`
 
-| 字段 | 类型 | 说明 | 推荐 |
-| --- | --- | --- | --- |
-| `enabled` | bool | 是否启用 Redis | 生产建议 `true` |
-| `host`/`port` | string/int | Redis 地址 | 按环境设置 |
-| `password` | string | Redis 密码 | 生产必须设置 |
-| `db` | int | DB 索引 | `0` |
-| `prefix` | string | 键前缀 | `dj` 或自定义 |
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `enabled` | bool | `true` | 是否启用 Redis | 生产建议 `true` |
+| `host` | string | `127.0.0.1` | Redis 地址 | 按环境设置 |
+| `port` | int | `6379` | Redis 端口 | `6379` |
+| `password` | string | `""` | Redis 密码 | 生产必须设置 |
+| `db` | int | `0` | DB 索引 | `0` |
+| `prefix` | string | `dj` | 键前缀 | `dj` 或自定义 |
 
 ## 5.6 `queue`
 
-| 字段 | 类型 | 说明 | 推荐 |
-| --- | --- | --- | --- |
-| `enabled` | bool | 是否启用异步队列 | 建议 `true` |
-| `host`/`port` | string/int | 队列 Redis 地址 | 可与 `redis` 共用不同 DB |
-| `password` | string | Redis 密码 | 生产必须设置 |
-| `db` | int | 队列 DB 索引 | 默认 `1` |
-| `concurrency` | int | Worker 并发数 | 5~20 |
-| `queues` | map[string]int | 队列权重 | `default:10`, `critical:5` |
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `enabled` | bool | `true` | 是否启用异步队列 | 建议 `true` |
+| `host` | string | `127.0.0.1` | 队列 Redis 地址 | 可与 `redis` 共用不同 DB |
+| `port` | int | `6379` | 队列 Redis 端口 | `6379` |
+| `password` | string | `""` | Redis 密码 | 生产必须设置 |
+| `db` | int | `1` | 队列 DB 索引 | `1` |
+| `concurrency` | int | `10` | Worker 并发数 | 5~20 |
+| `queues` | map | `default:10, critical:5` | 队列名称与权重 | 按需调整 |
 
 提示：如果 `queue.enabled=true` 但 Redis 不可达，异步任务（如邮件）会失败或堆积。
 
@@ -242,12 +252,16 @@ database:
 
 ## 5.9 `security`
 
-| 字段 | 类型 | 说明 | 推荐 |
-| --- | --- | --- | --- |
-| `login_rate_limit.window_seconds` | int | 限流窗口（秒） | `300` |
-| `login_rate_limit.max_attempts` | int | 最大尝试次数 | `5` |
-| `login_rate_limit.block_seconds` | int | 超限封禁时长（秒） | `900` |
-| `password_policy.*` | mixed | 密码复杂度策略 | 按企业要求提升 |
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `login_rate_limit.window_seconds` | int | `300` | 限流检测窗口（秒） | `300` |
+| `login_rate_limit.max_attempts` | int | `5` | 窗口内最大失败次数 | `5` |
+| `login_rate_limit.block_seconds` | int | `900` | 超限封禁时长（秒） | `900` |
+| `password_policy.min_length` | int | `8` | 密码最短长度 | `8` 或更高 |
+| `password_policy.require_upper` | bool | `true` | 是否要求大写字母 | `true` |
+| `password_policy.require_lower` | bool | `true` | 是否要求小写字母 | `true` |
+| `password_policy.require_number` | bool | `true` | 是否要求数字 | `true` |
+| `password_policy.require_special` | bool | `false` | 是否要求特殊字符 | 按需开启 |
 
 ## 5.10 `email`
 
@@ -275,9 +289,9 @@ database:
 
 ## 5.12 `order`
 
-| 字段 | 类型 | 说明 | 推荐 |
-| --- | --- | --- | --- |
-| `payment_expire_minutes` | int | 待支付订单超时分钟数 | `15~30` |
+| 字段 | 类型 | 默认值 | 说明 | 推荐 |
+| --- | --- | --- | --- | --- |
+| `payment_expire_minutes` | int | `15` | 待支付订单超时分钟数 | `15~30` |
 
 补充：
 

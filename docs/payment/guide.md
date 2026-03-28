@@ -1,6 +1,6 @@
 # 支付配置与回调指南
 
-> 更新时间：2026-02-27
+> 更新时间：2026-03-28
 
 目标只有两个：
 
@@ -155,6 +155,53 @@
 - `return_url` 填：`https://shop.example.com/pay`
 - 支持币种与交易类型请参考官方文档：<https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md>
 
+### 3.8 OKPay
+
+常用必填：
+
+- 网关地址（gateway_url，默认 `https://api.okaypay.me/shop`）
+- 商户 ID（merchant_id）
+- 商户密钥（merchant_token）
+- 支付结果通知地址（callback_url）
+- 支付完成回跳地址（return_url）
+
+常用选填：
+
+- 支付币种（coin，支持 `USDT` 或 `TRX`，默认 USDT）
+- 汇率（exchange_rate，默认 `1`）
+- 商户展示名称（display_name）
+
+建议：
+
+- `callback_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `return_url` 填：`https://shop.example.com/pay`
+
+---
+
+## 3.9 手续费配置
+
+每个支付渠道可独立配置手续费，用于核算实际到账金额：
+
+| 字段 | 说明 |
+|------|------|
+| 手续费率（fee_rate） | 百分比手续费，如填 `2.00` 表示 2% |
+| 固定手续费（fixed_fee） | 每笔固定扣除的金额 |
+
+手续费仅用于后台统计和利润计算，**不会**增加用户的支付金额。
+
+---
+
+## 3.10 交互模式
+
+创建支付渠道时需选择交互模式，不同模式决定用户的支付体验：
+
+| 模式 | 标识 | 说明 |
+|------|------|------|
+| 二维码 | `qr` | 生成支付二维码，用户扫码支付（适合微信/支付宝等） |
+| 跳转 | `redirect` | 跳转到支付平台页面完成支付（适合 PayPal/Stripe 等） |
+
+> 同一支付类型可创建多个渠道使用不同交互模式。例如支付宝可同时配置二维码和跳转模式。
+
 ## 4. 回调与 Webhook 一张表看懂
 
 ### 4.1 通用回调（这几个都填同一个地址）
@@ -166,6 +213,7 @@
 - 易支付
 - TokenPay
 - BEpusdt
+- OKPay
 
 填写地址：
 

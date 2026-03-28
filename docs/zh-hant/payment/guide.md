@@ -1,6 +1,6 @@
 # 支付配置與回調指南
 
-> 更新時間：2026-02-27
+> 更新時間：2026-03-28
 
 目標只有兩個：
 
@@ -155,6 +155,53 @@
 - `return_url` 填：`https://shop.example.com/pay`
 - 支持幣種與交易類型請參考官方文檔：<https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md>
 
+### 3.8 OKPay
+
+常用必填：
+
+- 網關地址（gateway_url，預設 `https://api.okaypay.me/shop`）
+- 商戶 ID（merchant_id）
+- 商戶密鑰（merchant_token）
+- 支付結果通知地址（callback_url）
+- 支付完成回跳地址（return_url）
+
+常用選填：
+
+- 支付幣種（coin，支持 `USDT` 或 `TRX`，預設 USDT）
+- 匯率（exchange_rate，預設 `1`）
+- 商戶展示名稱（display_name）
+
+建議：
+
+- `callback_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `return_url` 填：`https://shop.example.com/pay`
+
+---
+
+## 3.9 手續費設定
+
+每個支付渠道可獨立設定手續費，用於核算實際到帳金額：
+
+| 欄位 | 說明 |
+|------|------|
+| 手續費率（fee_rate） | 百分比手續費，如填 `2.00` 表示 2% |
+| 固定手續費（fixed_fee） | 每筆固定扣除的金額 |
+
+手續費僅用於後台統計和利潤計算，**不會**增加使用者的支付金額。
+
+---
+
+## 3.10 互動模式
+
+建立支付渠道時需選擇互動模式，不同模式決定使用者的支付體驗：
+
+| 模式 | 標識 | 說明 |
+|------|------|------|
+| 二維碼 | `qr` | 產生支付二維碼，使用者掃碼支付（適合微信/支付寶等） |
+| 跳轉 | `redirect` | 跳轉到支付平台頁面完成支付（適合 PayPal/Stripe 等） |
+
+> 同一支付類型可建立多個渠道使用不同互動模式。例如支付寶可同時設定二維碼和跳轉模式。
+
 ## 4. 回調與 Webhook 一張表看懂
 
 ### 4.1 通用回調（這幾個都填同一個地址）
@@ -166,6 +213,7 @@
 - 易支付
 - TokenPay
 - BEpusdt
+- OKPay
 
 填寫地址：
 
