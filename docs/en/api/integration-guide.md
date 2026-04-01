@@ -4,7 +4,7 @@ outline: deep
 
 # Site Integration Guide
 
-> Last updated: 2026-03-06
+> Last updated: 2026-04-01
 
 This guide explains how to set up site-to-site integration (cross-selling) between Dujiao-Next instances, helping you quickly go from "applying for credentials" to "async procurement + multi-level callbacks".
 

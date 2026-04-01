@@ -4,7 +4,7 @@ outline: deep
 
 # Site Integration Open API
 
-> Last Updated: 2026-03-06
+> Last Updated: 2026-04-01
 
 This document covers the Dujiao-Next site-to-site integration API endpoints under `/api/v1/upstream/*`.
 
@@ -140,7 +140,7 @@ headers = {
 
 ### 4.1 POST `/ping`
 
-Connectivity check. Also returns wallet balance and currency for the API user.
+Connectivity check. Also returns wallet balance, currency, and member level for the API user.
 
 **Request:** No body required.
 
@@ -154,6 +154,16 @@ Connectivity check. Also returns wallet balance and currency for the API user.
 | `user_id` | number | API user ID |
 | `balance` | string | Available wallet balance |
 | `currency` | string | Site currency (e.g. `CNY`, `USD`) |
+| `member_level` | object\|null | User's member level info (`null` if no member level) |
+
+**`member_level` sub-object:**
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | number | Member level ID |
+| `name` | object | Multilingual level name, e.g. `{"zh-CN":"黄金会员","en":"Gold"}` |
+| `slug` | string | Level identifier |
+| `icon` | string | Level icon URL |
 
 **Response example:**
 
@@ -164,7 +174,13 @@ Connectivity check. Also returns wallet balance and currency for the API user.
   "protocol_version": "1.0",
   "user_id": 42,
   "balance": "1000.00",
-  "currency": "CNY"
+  "currency": "CNY",
+  "member_level": {
+    "id": 1,
+    "name": { "zh-CN": "黄金会员", "en": "Gold" },
+    "slug": "gold",
+    "icon": "https://example.com/gold.png"
+  }
 }
 ```
 
@@ -203,8 +219,10 @@ Fetch the upstream product list (only active products are returned).
 | `seo_meta` | object | SEO metadata |
 | `images` | string[] | Image URL list |
 | `tags` | string[] | Tag list |
-| `price_amount` | string | Base price |
-| `fulfillment_type` | string | Fulfillment type: `auto` / `manual` / `upstream` |
+| `price_amount` | string | Actual selling price (member price if applicable) |
+| `original_price` | string | Original price (only returned when member discount exists, `omitempty`) |
+| `member_price` | string | Member price (only returned when member discount exists, `omitempty`) |
+| `fulfillment_type` | string | Fulfillment type: `auto` / `manual` |
 | `manual_form_schema` | object | Manual fulfillment form schema (required buyer input for `manual` type products) |
 | `is_active` | boolean | Whether the product is active |
 | `category_id` | number | Category ID |
@@ -219,7 +237,9 @@ Fetch the upstream product list (only active products are returned).
 | `id` | number | SKU ID (**use this ID when placing orders**) |
 | `sku_code` | string | SKU code |
 | `spec_values` | object | Spec values, e.g. `{"Color":"Red","Size":"128GB"}` |
-| `price_amount` | string | SKU price |
+| `price_amount` | string | Actual selling price (member price if applicable) |
+| `original_price` | string | Original price (only returned when member discount exists, `omitempty`) |
+| `member_price` | string | Member price (only returned when member discount exists, `omitempty`) |
 | `stock_status` | string | Stock status: `unlimited` / `in_stock` / `low_stock` / `out_of_stock` |
 | `stock_quantity` | number | Stock quantity (-1 = unlimited) |
 | `is_active` | boolean | Whether the SKU is active |
@@ -246,7 +266,9 @@ Fetch the upstream product list (only active products are returned).
       "seo_meta": {},
       "images": ["https://example.com/img1.jpg"],
       "tags": ["hot"],
-      "price_amount": "9.90",
+      "price_amount": "7.90",
+      "original_price": "9.90",
+      "member_price": "7.90",
       "fulfillment_type": "auto",
       "manual_form_schema": null,
       "is_active": true,
@@ -256,7 +278,9 @@ Fetch the upstream product list (only active products are returned).
           "id": 1,
           "sku_code": "DEFAULT",
           "spec_values": {},
-          "price_amount": "9.90",
+          "price_amount": "7.90",
+          "original_price": "9.90",
+          "member_price": "7.90",
           "stock_status": "in_stock",
           "stock_quantity": 100,
           "is_active": true
@@ -551,13 +575,13 @@ Site B signs with the `api_key` / `api_secret` configured in Site A's connection
 
 | Status | Description |
 | --- | --- |
-| `pending` | Pending payment |
+| `pending_payment` | Pending payment |
 | `paid` | Paid (awaiting fulfillment) |
-| `processing` | Processing |
+| `fulfilling` | Fulfilling (delivery in progress) |
+| `partially_delivered` | Partially delivered |
+| `delivered` | Delivered |
 | `completed` | Completed |
 | `canceled` | Canceled |
-| `refunded` | Refunded |
-| `exception` | Exception |
 
 ---
 
