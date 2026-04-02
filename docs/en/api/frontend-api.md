@@ -88,40 +88,6 @@ The following fields have been permanently removed from Public API responses; th
 
 ---
 
-### 0.1 v0.0.3-beta API Changes (2026-02-22)
-
-#### Unified Currency Strategy
-
-- The site now supports only one currency, sourced from `site_config.currency` (default: `CNY`).
-- Currency must be a 3-letter uppercase code (e.g. `CNY`, `USD`); invalid values are normalized to `CNY`.
-- Amount-related APIs (order preview, orders, payments, wallet) now consistently use this site currency.
-
-#### Breaking Field Changes
-
-- `PublicProduct.price_currency` has been removed.
-- `PublicProduct.promotion_price_currency` has been removed.
-- If your frontend still reads these fields, switch to `currency` from `GET /public/config`.
-
-#### Multi-SKU Input Added for Admin Product APIs
-
-- Admin product create/update APIs now support a `skus` array for multi-variant pricing and stock.
-- Compatibility behavior:
-  - Without `skus`: handled as single-SKU mode (legacy `price_amount` + `manual_stock_total`).
-  - With `skus`: handled as multi-SKU mode, product price/stock are derived from SKUs.
-- In multi-SKU mode, backend validation enforces:
-  - `sku_code` must be unique within the same product (case-insensitive);
-  - each SKU `price_amount` must be greater than 0;
-  - at least one active SKU (`is_active=true`) must exist.
-
-#### Promotion Price Extended to SKU Level
-
-- `PublicProduct` now includes a `skus` field (type `PublicSKU[]`), each SKU containing its own `promotion_price_amount`.
-- Promotions are still configured at the product level, but promotion prices are calculated independently based on each SKU's original price.
-- The product-level `promotion_price_amount` is now the lowest promotion price among all SKUs (for list page display).
-- Order processing logic is unaffected (already calculates per-SKU pricing).
-
----
-
 ## 1. General Conventions
 
 ### 1.1 Base URL

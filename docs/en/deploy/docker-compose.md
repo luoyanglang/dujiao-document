@@ -474,7 +474,7 @@ And ensure that the `api` service in your compose file has these environment var
 
 Upgrade:
 
-1. Change `TAG` in `.env` to the target version (e.g., `v1.0.3`)
+1. Change `TAG` in `.env` to the target version (e.g., `v1.0.0`)
 2. Run `docker compose --env-file .env -f <your-compose-file> pull`
 3. Run `docker compose --env-file .env -f <your-compose-file> up -d`
 

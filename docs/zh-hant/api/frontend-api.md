@@ -88,40 +88,6 @@ outline: deep
 
 ---
 
-### 0.1 v0.0.3-beta API 變更（2026-02-22）
-
-#### 幣種統一策略
-
-- 全站僅允許一種幣種，配置來源：`site_config.currency`（預設 `CNY`）。
-- 幣種值必須為 3 位大寫代碼（如 `CNY`、`USD`），非法值會自動歸一化為 `CNY`。
-- 訂單預覽、訂單、支付、錢包等金額相關介面統一使用該站點幣種。
-
-#### 破壞性字段變更
-
-- `PublicProduct.price_currency` 已移除。
-- `PublicProduct.promotion_price_currency` 已移除。
-- 前端若仍讀取上述字段，請改為讀取 `GET /public/config` 返回的 `currency`。
-
-#### 管理後臺商品新增多 SKU 入參
-
-- 管理後臺商品建立/更新介面新增 `skus` 陣列，用於提交多規格價格與庫存。
-- 相容規則：
-  - 不傳 `skus`：按單規格模式處理（沿用 `price_amount` + `manual_stock_total`）。
-  - 傳 `skus`：按多規格模式處理，商品價格與庫存由 SKU 派生。
-- 多規格模式下，後端會校驗：
-  - `sku_code` 在同商品內唯一（不區分大小寫）；
-  - 每個 SKU 的 `price_amount > 0`；
-  - 至少存在 1 個啟用中的 SKU（`is_active=true`）。
-
-#### 促銷價下沉至 SKU 級別
-
-- `PublicProduct` 新增 `skus` 字段（類型 `PublicSKU[]`），每個 SKU 包含獨立的 `promotion_price_amount`。
-- 促銷活動仍以商品為維度配置，但促銷價基於每個 SKU 的原價獨立計算。
-- 產品級 `promotion_price_amount` 現取所有 SKU 促銷價中的最低值（適用於列表頁展示）。
-- 下單邏輯不受影響（已按 SKU 價格獨立計算）。
-
----
-
 ## 1. 通用約定
 
 ### 1.1 Base URL

@@ -40,21 +40,21 @@ Please download the corresponding version package from the Releases of the follo
 
 Example (replace the file name with your actual Release artifact):
 
-> The API package follows GoReleaser naming rules: `dujiao-next_<tag>_Linux_x86_64.tar.gz`, for example `dujiao-next_v0.1.1_Linux_x86_64.tar.gz`.
-> Example User package name: `dujiao-next-user-v0.1.1.zip`.
-> Example Admin package name: `dujiao-next-admin-v0.1.1.zip`.
+> The API package follows GoReleaser naming rules: `dujiao-next_<tag>_Linux_x86_64.tar.gz`, for example `dujiao-next_v1.0.0_Linux_x86_64.tar.gz`.
+> Example User package name: `dujiao-next-user-v1.0.0.zip`.
+> Example Admin package name: `dujiao-next-admin-v1.0.0.zip`.
 
 ```bash
 # API
-wget -O api.tar.gz https://github.com/dujiao-next/dujiao-next/releases/download/v0.1.1/dujiao-next_v0.1.1_Linux_x86_64.tar.gz
+wget -O api.tar.gz https://github.com/dujiao-next/dujiao-next/releases/download/v1.0.0/dujiao-next_v1.0.0_Linux_x86_64.tar.gz
 mkdir -p api && tar -xzf api.tar.gz -C api
 
 # User
-wget -O user.zip https://github.com/dujiao-next/user/releases/download/v0.1.1/dujiao-next-user-v0.1.1.zip
+wget -O user.zip https://github.com/dujiao-next/user/releases/download/v1.0.0/dujiao-next-user-v1.0.0.zip
 mkdir -p user && unzip -o user.zip -d user
 
 # Admin
-wget -O admin.zip https://github.com/dujiao-next/admin/releases/download/v0.1.1/dujiao-next-admin-v0.1.1.zip
+wget -O admin.zip https://github.com/dujiao-next/admin/releases/download/v1.0.0/dujiao-next-admin-v1.0.0.zip
 mkdir -p admin && unzip -o admin.zip -d admin
 ```
 > After extracting the API package, the `/www/wwwroot/dujiao-next/api` directory should contain:

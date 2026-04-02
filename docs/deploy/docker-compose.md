@@ -486,7 +486,7 @@ docker compose --env-file .env -f docker-compose.sqlite.yml down
 
 升级：
 
-1. 修改 `.env` 中 `TAG` 为目标版本（例如 `v1.0.3`）
+1. 修改 `.env` 中 `TAG` 为目标版本（例如 `v1.0.0`）
 2. 执行 `docker compose --env-file .env -f <你的方案文件> pull`
 3. 执行 `docker compose --env-file .env -f <你的方案文件> up -d`
 
