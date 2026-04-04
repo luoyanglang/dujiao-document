@@ -16,7 +16,7 @@ The system requires at least two domains:
 - User storefront: `user.example.com` (or `shop.example.com`)
 - Admin panel: `admin.example.com`
 
-The API is accessed via same-origin reverse proxy and does not require a separate domain.
+The API is accessed through each site's reverse proxy (e.g., `user.example.com/api` and `admin.example.com/api` both proxy to the backend) and does not require a separate domain.
 
 Common URL examples:
 

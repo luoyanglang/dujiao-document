@@ -16,7 +16,7 @@
 - 前台商城：`user.example.com`（或 `shop.example.com`）
 - 管理後台：`admin.example.com`
 
-API 透過同源反向代理方式訪問，無需額外網域。
+API 透過各站點的反向代理訪問（如 `user.example.com/api` 和 `admin.example.com/api` 均代理到後端），無需額外網域。
 
 常用地址示例：
 
