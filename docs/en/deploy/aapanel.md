@@ -127,18 +127,18 @@ Recommended directories:
 It is recommended to create two sites:
 
 - Front-end site: `shop.example.com` → root directory `user/dist`
-- Admin site: `admin.example.com` (or `shop.example.com/admin`) → root directory `admin/dist`
+- Admin site: `admin.example.com` → root directory `admin/dist`
 
 And apply SSL certificates for both.
 
-## 7. Reverse Proxy Configuration (Same-Origin Mode)
+## 7. Reverse Proxy Configuration
 
 Add in the outer gateway (Nginx):
 
 - `/api` → `http://127.0.0.1:8080/api`
 - `/uploads` → `http://127.0.0.1:8080/uploads`
 
-### 7.1 Subdomain Deployment Example (Recommended)
+### 7.1 Subdomain Deployment Example
 
 ```nginx
 # User frontend
@@ -180,48 +180,6 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads/ {
-        proxy_pass http://127.0.0.1:8080/uploads/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-### 7.2 Single Domain `/admin` Subpath Example (Optional)
-
-```nginx
-server {
-    listen 80;
-    server_name shop.example.com;
-
-    root /www/wwwroot/dujiao-next/user/dist;
-    index index.html;
-
-    # User frontend
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Admin frontend
-    location = /admin {
-        return 301 /admin/;
-    }
-
-    location /admin/ {
-        alias /www/wwwroot/dujiao-next/admin/dist/;
-        try_files $uri $uri/ /admin/index.html;
     }
 
     location /api/ {

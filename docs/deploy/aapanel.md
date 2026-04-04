@@ -133,18 +133,18 @@ API 首次启动时会读取该配置完成管理员初始化。
 建议两个站点：
 
 - 前台站点：`shop.example.com` → 根目录 `user/dist`
-- 后台站点：`admin.example.com`（或 `shop.example.com/admin`）→ 根目录 `admin/dist`
+- 后台站点：`admin.example.com` → 根目录 `admin/dist`
 
 并为两者申请 SSL 证书。
 
-## 7. 反向代理配置（同源模式）
+## 7. 反向代理配置
 
 在外层网关（Nginx）中添加：
 
 - `/api` → `http://127.0.0.1:8080/api`
 - `/uploads` → `http://127.0.0.1:8080/uploads`
 
-### 7.1 分域名部署示例（推荐）
+### 7.1 分域名部署示例
 
 ```nginx
 # 前台 User
@@ -205,51 +205,6 @@ server {
     }
 }
 ```
-
-### 7.2 单域名 `/admin` 子路径示例（可选）
-
-```nginx
-server {
-    listen 80;
-    server_name shop.example.com;
-
-    root /www/wwwroot/dujiao-next/user/dist;
-    index index.html;
-
-    # 前台 User
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # 后台 Admin
-    location = /admin {
-        return 301 /admin/;
-    }
-
-    location /admin/ {
-        alias /www/wwwroot/dujiao-next/admin/dist/;
-        try_files $uri $uri/ /admin/index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads/ {
-        proxy_pass http://127.0.0.1:8080/uploads/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-前端 history 路由需配置 `try_files` 到 `index.html`。
 
 ## 8. 安全建议
 

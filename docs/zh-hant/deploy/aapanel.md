@@ -133,18 +133,18 @@ API 首次啟動時會讀取該配置完成管理員初始化。
 建議兩個站點：
 
 - 前臺站點：`shop.example.com` → 根目錄 `user/dist`
-- 後臺站點：`admin.example.com`（或 `shop.example.com/admin`）→ 根目錄 `admin/dist`
+- 後臺站點：`admin.example.com` → 根目錄 `admin/dist`
 
 併為兩者申請 SSL 證書。
 
-## 7. 反向代理配置（同源模式）
+## 7. 反向代理配置
 
 在外層網關（Nginx）中添加：
 
 - `/api` → `http://127.0.0.1:8080/api`
 - `/uploads` → `http://127.0.0.1:8080/uploads`
 
-### 7.1 分域名部署示例（推薦）
+### 7.1 分域名部署示例
 
 ```nginx
 # 前臺 User
@@ -186,49 +186,6 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads/ {
-        proxy_pass http://127.0.0.1:8080/uploads/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-### 7.2 單域名 `/admin` 子路徑示例（可選）
-
-```nginx
-server {
-    listen 80;
-    server_name shop.example.com;
-
-    root /www/wwwroot/dujiao-next/user/dist;
-    index index.html;
-
-    # 前臺 User
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # 後臺 Admin
-    location = /admin {
-        return 301 /admin/;
-    }
-
-    location /admin/ {
-        alias /www/wwwroot/dujiao-next/admin/dist/;
-        try_files $uri $uri/ /admin/index.html;
     }
 
     location /api/ {

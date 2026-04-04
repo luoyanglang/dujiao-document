@@ -9,22 +9,19 @@
 
 ## 1. 開始前先準備
 
-先確認你的支付回調入口可以被公網訪問。  
-部署方式支持兩種：
+先確認你的支付回調入口可以被公網訪問。
 
-1. 同源反向代理（常見）
-2. 前後端分域（也支持）
+系統需要至少兩個網域：
+
+- 前台商城：`user.example.com`（或 `shop.example.com`）
+- 管理後台：`admin.example.com`
+
+API 透過同源反向代理方式訪問，無需額外網域。
 
 常用地址示例：
 
-- 同源反向代理
-  - 支付結果通知地址（回調）：`https://shop.example.com/api/v1/payments/callback`
-  - 用戶支付完成返回頁（回跳）：`https://shop.example.com/pay`
-- 前後端分域
-  - 支付結果通知地址（回調）：`https://api.example.com/api/v1/payments/callback`
-  - 用戶支付完成返回頁（回跳）：`https://shop.example.com/pay`
-
-說明：本文後續示例默認使用「前後端分域」寫法；如果你是同源反向代理，把示例裡的 `api.example.com` 替換為你的站點網域即可。
+- 支付結果通知地址（回調）：`https://user.example.com/api/v1/payments/callback`
+- 用戶支付完成返回頁（回跳）：`https://user.example.com/pay`
 
 ## 2. 後台操作路徑
 
@@ -52,7 +49,7 @@
 
 建議：
 
-- `notify_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `notify_url` 填：`https://user.example.com/api/v1/payments/callback`
 - `return_url` 填：`https://shop.example.com/pay`
 
 ### 3.2 PayPal
@@ -96,7 +93,7 @@
 
 建議：
 
-- `notify_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `notify_url` 填：`https://user.example.com/api/v1/payments/callback`
 - 若你使用手機網站/電腦網站支付，也要填 `return_url`：`https://shop.example.com/pay`
 
 ### 3.5 微信支付
@@ -112,7 +109,7 @@
 
 建議：
 
-- `notify_url` 填：`https://api.example.com/api/v1/payments/callback?channel_id=你的渠道ID`
+- `notify_url` 填：`https://user.example.com/api/v1/payments/callback?channel_id=你的渠道ID`
 - 如果是 H5 支付，請再填 `h5_redirect_url`：`https://shop.example.com/pay`
 
 ### 3.6 TokenPay
@@ -131,7 +128,7 @@
 
 建議：
 
-- `notify_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `notify_url` 填：`https://user.example.com/api/v1/payments/callback`
 - `redirect_url` 填：`https://shop.example.com/pay`
 - 支持幣種請參考官方文檔：<https://github.com/LightCountry/TokenPay/blob/master/Wiki/docs.md>
 
@@ -151,7 +148,7 @@
 
 建議：
 
-- `notify_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `notify_url` 填：`https://user.example.com/api/v1/payments/callback`
 - `return_url` 填：`https://shop.example.com/pay`
 - 支持幣種與交易類型請參考官方文檔：<https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md>
 
@@ -173,7 +170,7 @@
 
 建議：
 
-- `callback_url` 填：`https://api.example.com/api/v1/payments/callback`
+- `callback_url` 填：`https://user.example.com/api/v1/payments/callback`
 - `return_url` 填：`https://shop.example.com/pay`
 
 ---
@@ -217,13 +214,13 @@
 
 填寫地址：
 
-- `POST https://api.example.com/api/v1/payments/callback`
+- `POST https://user.example.com/api/v1/payments/callback`
 
 ### 4.2 PayPal（單獨 Webhook 地址）
 
 填寫地址：
 
-- `POST https://api.example.com/api/v1/payments/webhook/paypal?channel_id=你的渠道ID`
+- `POST https://user.example.com/api/v1/payments/webhook/paypal?channel_id=你的渠道ID`
 
 說明：
 
@@ -233,7 +230,7 @@
 
 填寫地址：
 
-- `POST https://api.example.com/api/v1/payments/webhook/stripe?channel_id=你的渠道ID`
+- `POST https://user.example.com/api/v1/payments/webhook/stripe?channel_id=你的渠道ID`
 
 說明：
 
@@ -273,8 +270,8 @@
 
 例如，你將支付回調路由改為 `/api/my-secret/pay-notify`，則：
 
-- 原來填：`https://api.example.com/api/v1/payments/callback`
-- 現在填：`https://api.example.com/api/my-secret/pay-notify`
+- 原來填：`https://user.example.com/api/v1/payments/callback`
+- 現在填：`https://user.example.com/api/my-secret/pay-notify`
 
 否則支付平台的回調通知將無法到達你的伺服器。
 :::

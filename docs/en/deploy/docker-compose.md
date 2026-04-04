@@ -310,7 +310,7 @@ networks:
 ```
 ## 6. Outer Nginx Reverse Proxy (Required)
 
-Both `user` and `admin` access the backend using the same-origin `/api` and `/uploads`, so you need to configure a reverse proxy at the outermost gateway (Nginx/Ingress).
+Both `user` and `admin` access the backend via `/api` and `/uploads`, so you need to configure a reverse proxy at the outermost gateway (Nginx/Ingress).
 
 > The example below uses the default ports:
 >
@@ -320,7 +320,7 @@ Both `user` and `admin` access the backend using the same-origin `/api` and `/up
 >
 > If you have modified the ports in `.env`, please replace them accordingly.
 
-### 6.1 Subdomain Deployment Example (Recommended)
+### 6.1 Subdomain Deployment Example
 
 ```nginx
 # User frontend
@@ -360,54 +360,6 @@ server {
 
     location / {
         proxy_pass http://127.0.0.1:8082;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads/ {
-        proxy_pass http://127.0.0.1:8080/uploads/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-### 6.2 Single Domain `/admin` Subpath Example (Optional)
-
-If you only want to expose a single domain (for example, `shop.example.com`), you can configure it as follows:
-
-```nginx
-server {
-    listen 80;
-    server_name shop.example.com;
-
-    # User frontend
-    location / {
-        proxy_pass http://127.0.0.1:8081;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Admin frontend
-    location = /admin {
-        return 301 /admin/;
-    }
-
-    location /admin/ {
-        proxy_pass http://127.0.0.1:8082/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

@@ -317,7 +317,7 @@ networks:
 
 ## 6. 外层 Nginx 反向代理（必需）
 
-`user` 与 `admin` 采用同源 `/api`、`/uploads` 访问后端，因此你需要在最外层网关（Nginx/Ingress）配置反向代理。
+`user` 与 `admin` 分别通过各自域名的 `/api`、`/uploads` 路径访问后端，因此你需要在最外层网关（Nginx/Ingress）配置反向代理。
 
 > 下方示例使用默认端口：
 >
@@ -327,7 +327,7 @@ networks:
 >
 > 如果你在 `.env` 修改了端口，请同步替换。
 
-### 6.1 分域名部署示例（推荐）
+### 6.1 分域名部署示例
 
 ```nginx
 # 前台 User
@@ -390,57 +390,6 @@ server {
     }
 }
 ```
-
-### 6.2 单域名 `/admin` 子路径示例（可选）
-
-如果你希望只暴露一个域名（例如 `shop.example.com`），可按下列方式配置：
-
-```nginx
-server {
-    listen 80;
-    server_name shop.example.com;
-
-    # 前台 User
-    location / {
-        proxy_pass http://127.0.0.1:8081;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # 后台 Admin
-    location = /admin {
-        return 301 /admin/;
-    }
-
-    location /admin/ {
-        proxy_pass http://127.0.0.1:8082/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads/ {
-        proxy_pass http://127.0.0.1:8080/uploads/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-如果没有 `/api` 和 `/uploads` 代理，User/Admin 页面虽然能打开，但接口与上传文件会访问失败。
 
 ## 7. 启动与运维命令
 

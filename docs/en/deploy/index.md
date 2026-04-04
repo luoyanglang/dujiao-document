@@ -26,7 +26,7 @@ The official documentation prioritizes formal deployment guides that can be revi
 
 ## 3. Pre-Deployment Checklist
 
-- Prepare a Linux server and domain(s) that resolve to your public IP (same-origin or split domains both work)
+- Prepare a Linux server and domain(s) that resolve to your public IP (one domain each for storefront and admin panel)
 - Plan your ports (at minimum API port + web ports)
 - Set strong random keys in `config.yml`:
   - `jwt.secret`

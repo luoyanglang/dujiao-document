@@ -112,11 +112,11 @@ You can choose to:
 - Host `admin/dist` with Nginx (recommended to bind to the `/admin` path)
 - Or temporarily use `npm run preview` for verification
 
-## 5. Nginx Reverse Proxy Recommendations (Same-Origin Mode)
+## 5. Nginx Reverse Proxy Configuration
 
-It is recommended to use a same-origin proxy mode: both User and Admin frontends send requests to `/api` and `/uploads`, which are forwarded by the outer Nginx to the API service (`127.0.0.1:8080`).
+User and Admin each require their own domain. Both frontends send requests to `/api` and `/uploads`, which are forwarded by the outer Nginx to the API service (`127.0.0.1:8080`).
 
-### 5.1 Example of Subdomain Deployment (Recommended)
+### 5.1 Subdomain Deployment Example
 
 - Frontend: `user.example.com` → `user/dist`
 - Admin: `admin.example.com` → `admin/dist`
@@ -180,51 +180,8 @@ server {
     }
 }
 ```
-### 5.2 Single Domain `/admin` Subpath Example (Optional)
-
-```nginx
-server {
-    listen 80;
-    server_name shop.example.com;
-
-    root /var/www/dujiao-next/user/dist;
-    index index.html;
-
-    # User frontend
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Admin frontend
-    location = /admin {
-        return 301 /admin/;
-    }
-
-    location /admin/ {
-        alias /var/www/dujiao-next/admin/dist/;
-        try_files $uri $uri/ /admin/index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads/ {
-        proxy_pass http://127.0.0.1:8080/uploads/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
 Also recommended:
 
-- Bind separate domains for the frontend and backend (for clarity)
 - Enable HTTPS and enforce redirect to 443
 - Frontend SPA routing must retain `try_files ... /index.html`
 

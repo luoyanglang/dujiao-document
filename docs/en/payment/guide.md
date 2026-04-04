@@ -9,22 +9,19 @@ You only need two outcomes:
 
 ## 1. What You Need Before Starting
 
-Make sure your payment callback endpoint is publicly reachable.  
-Both deployment styles are supported:
+Make sure your payment callback endpoint is publicly reachable.
 
-1. Same-origin reverse proxy (common)
-2. Separate frontend/backend domains
+The system requires at least two domains:
+
+- User storefront: `user.example.com` (or `shop.example.com`)
+- Admin panel: `admin.example.com`
+
+The API is accessed via same-origin reverse proxy and does not require a separate domain.
 
 Common URL examples:
 
-- Same-origin reverse proxy
-  - Payment notification URL (callback): `https://shop.example.com/api/v1/payments/callback`
-  - Customer return page after payment: `https://shop.example.com/pay`
-- Separate frontend/backend domains
-  - Payment notification URL (callback): `https://api.example.com/api/v1/payments/callback`
-  - Customer return page after payment: `https://shop.example.com/pay`
-
-Note: The rest of this guide uses the separate-domain example. If you use same-origin reverse proxy, replace `api.example.com` with your site domain.
+- Payment notification URL (callback): `https://user.example.com/api/v1/payments/callback`
+- Customer return page after payment: `https://user.example.com/pay`
 
 ## 2. Where to Configure in Admin
 
@@ -52,7 +49,7 @@ Usually required:
 
 Recommended:
 
-- `notify_url`: `https://api.example.com/api/v1/payments/callback`
+- `notify_url`: `https://user.example.com/api/v1/payments/callback`
 - `return_url`: `https://shop.example.com/pay`
 
 ### 3.2 PayPal
@@ -96,7 +93,7 @@ Usually required:
 
 Recommended:
 
-- `notify_url`: `https://api.example.com/api/v1/payments/callback`
+- `notify_url`: `https://user.example.com/api/v1/payments/callback`
 - If you use WAP/Desktop payments, also fill `return_url`: `https://shop.example.com/pay`
 
 ### 3.5 WeChat Pay
@@ -112,7 +109,7 @@ Usually required:
 
 Recommended:
 
-- `notify_url`: `https://api.example.com/api/v1/payments/callback?channel_id=YOUR_CHANNEL_ID`
+- `notify_url`: `https://user.example.com/api/v1/payments/callback?channel_id=YOUR_CHANNEL_ID`
 - For H5 mode, also fill `h5_redirect_url`: `https://shop.example.com/pay`
 
 ### 3.6 TokenPay
@@ -131,7 +128,7 @@ Common optional fields:
 
 Recommended:
 
-- `notify_url`: `https://api.example.com/api/v1/payments/callback`
+- `notify_url`: `https://user.example.com/api/v1/payments/callback`
 - `redirect_url`: `https://shop.example.com/pay`
 - Supported currencies: <https://github.com/LightCountry/TokenPay/blob/master/Wiki/docs.md>
 
@@ -151,7 +148,7 @@ Common optional fields:
 
 Recommended:
 
-- `notify_url`: `https://api.example.com/api/v1/payments/callback`
+- `notify_url`: `https://user.example.com/api/v1/payments/callback`
 - `return_url`: `https://shop.example.com/pay`
 - Supported currencies and trade types: <https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md>
 
@@ -173,7 +170,7 @@ Common optional fields:
 
 Recommended:
 
-- `callback_url`: `https://api.example.com/api/v1/payments/callback`
+- `callback_url`: `https://user.example.com/api/v1/payments/callback`
 - `return_url`: `https://shop.example.com/pay`
 
 ---
@@ -217,13 +214,13 @@ Applies to:
 
 Use:
 
-- `POST https://api.example.com/api/v1/payments/callback`
+- `POST https://user.example.com/api/v1/payments/callback`
 
 ### 4.2 PayPal (separate webhook URL)
 
 Use:
 
-- `POST https://api.example.com/api/v1/payments/webhook/paypal?channel_id=YOUR_CHANNEL_ID`
+- `POST https://user.example.com/api/v1/payments/webhook/paypal?channel_id=YOUR_CHANNEL_ID`
 
 Note:
 
@@ -233,7 +230,7 @@ Note:
 
 Use:
 
-- `POST https://api.example.com/api/v1/payments/webhook/stripe?channel_id=YOUR_CHANNEL_ID`
+- `POST https://user.example.com/api/v1/payments/webhook/stripe?channel_id=YOUR_CHANNEL_ID`
 
 Note:
 
@@ -273,8 +270,8 @@ After customizing callback routes, you **must** update the notification URL (`no
 
 For example, if you set the payment callback route to `/api/my-secret/pay-notify`:
 
-- Before: `https://api.example.com/api/v1/payments/callback`
-- After: `https://api.example.com/api/my-secret/pay-notify`
+- Before: `https://user.example.com/api/v1/payments/callback`
+- After: `https://user.example.com/api/my-secret/pay-notify`
 
 Otherwise, payment provider callbacks will not reach your server.
 :::

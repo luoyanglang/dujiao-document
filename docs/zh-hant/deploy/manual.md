@@ -119,11 +119,11 @@ npm run build
 - 用 Nginx 託管 `admin/dist`（建議綁定 `/admin` 路徑）
 - 或臨時使用 `npm run preview` 驗證
 
-## 5. Nginx 反向代理建議（同源模式）
+## 5. Nginx 反向代理配置
 
-推薦採用同源代理模式：User 與 Admin 前端統一請求 `/api`、`/uploads`，由外層 Nginx 轉發到 API 服務（`127.0.0.1:8080`）。
+User 與 Admin 前端各自透過 `/api`、`/uploads` 路徑反向代理到 API 服務（`127.0.0.1:8080`），需分別配置兩個網域。
 
-### 5.1 分域名部署示例（推薦）
+### 5.1 分域名部署示例
 
 - 前臺：`user.example.com` → `user/dist`
 - 後臺：`admin.example.com` → `admin/dist`
@@ -188,52 +188,8 @@ server {
 }
 ```
 
-### 5.2 單域名 `/admin` 子路徑示例（可選）
+建議：
 
-```nginx
-server {
-    listen 80;
-    server_name shop.example.com;
-
-    root /var/www/dujiao-next/user/dist;
-    index index.html;
-
-    # 前臺 User
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # 後臺 Admin
-    location = /admin {
-        return 301 /admin/;
-    }
-
-    location /admin/ {
-        alias /var/www/dujiao-next/admin/dist/;
-        try_files $uri $uri/ /admin/index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads/ {
-        proxy_pass http://127.0.0.1:8080/uploads/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-同時建議：
-
-- 前臺與後臺分別綁定獨立域名（更清晰）
 - 開啟 HTTPS 並強制跳轉到 443
 - 前端 SPA 路由必須保留 `try_files ... /index.html`
 
