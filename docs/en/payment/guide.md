@@ -1,6 +1,6 @@
 # Payment Configuration and Callback Guide
 
-> Updated: 2026-03-28
+> Updated: 2026-04-04
 
 You only need two outcomes:
 
@@ -239,7 +239,53 @@ Note:
 
 - `channel_id` is strongly recommended if you have multiple Stripe channels.
 
-## 5. 5-Minute Pre-Launch Checklist
+## 5. Custom Callback Routes (Optional)
+
+Since this project is open source, the default callback paths (e.g., `/api/v1/payments/callback`) are publicly known, which poses a risk of malicious callback simulation or brute-force attacks. You can customize callback route paths in the admin panel to hide the defaults and improve security.
+
+### 5.1 How to Configure
+
+Go to:
+
+- `Admin → Settings → Callback Routes`
+
+You can customize these 4 callback paths:
+
+| Callback Type | Default Path | Description |
+|--------------|-------------|-------------|
+| Payment Callback | `/api/v1/payments/callback` | Shared by Alipay/WeChat/EPay/TokenPay/BEpusdt/OKPay |
+| PayPal Webhook | `/api/v1/payments/webhook/paypal` | PayPal only |
+| Stripe Webhook | `/api/v1/payments/webhook/stripe` | Stripe only |
+| Upstream Callback | `/api/v1/upstream/callback` | Upstream supplier callback |
+
+Leave empty to keep using the default path.
+
+### 5.2 Rules
+
+- Custom paths must start with `/api/`, e.g., `/api/my-secret-path/pay-notify`
+- All 4 paths must be unique (no duplicates)
+- Must not conflict with existing system routes (e.g., `/api/v1/admin/...`, `/api/v1/public/...`)
+
+### 5.3 After Configuration
+
+::: warning Important
+After customizing callback routes, you **must** update the notification URL (`notify_url` / `callback_url`) in each payment channel configuration to match the new path.
+
+For example, if you set the payment callback route to `/api/my-secret/pay-notify`:
+
+- Before: `https://api.example.com/api/v1/payments/callback`
+- After: `https://api.example.com/api/my-secret/pay-notify`
+
+Otherwise, payment provider callbacks will not reach your server.
+:::
+
+### 5.4 How It Works
+
+- Once a custom route is configured, the corresponding default path automatically returns 404 and becomes undetectable
+- Callback types without custom paths continue using defaults — they are independent
+- Changes take effect within approximately 5 minutes (or immediately on the current instance)
+
+## 6. 5-Minute Pre-Launch Checklist
 
 Test in this order:
 
@@ -248,13 +294,13 @@ Test in this order:
 3. Confirm customer is redirected to `https://shop.example.com/pay`
 4. Confirm payment record appears in admin for that order
 
-## 6. Common Problems
+## 7. Common Problems
 
 ### Q1: Payment succeeded for user, but order is still unpaid in admin
 
 Check first:
 
-- Callback URL typo (domain/path)
+- Callback URL typo (domain/path) — if you configured custom callback routes, make sure each channel's `notify_url` has been updated accordingly
 - API domain not publicly reachable
 - Failed callback logs in payment provider console
 
