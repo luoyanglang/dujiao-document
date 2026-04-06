@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.0.1] - 2026-04-06
+
+### Update Details:
+- Added custom callback address configuration and refined the related setup flow, making external system integrations more flexible.
+- Improved the media library with multi-image upload, multi-select, and physical deletion for faster bulk asset management in the admin panel.
+- Fixed membership level icon display issues so related asset selection and presentation are more stable.
+- Improved automatic login inside Telegram Mini App for a smoother entry flow in Telegram scenarios.
+- Fixed low-stock threshold and inventory alert interval checks for auto-delivered products, while refining product deletion, dashboard trends, and editor details for steadier daily admin operations.
+
 ## [v1.0.0] - 2026-04-02
 
 ### Update Details:
