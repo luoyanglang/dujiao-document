@@ -111,8 +111,6 @@ TZ=Asia/Shanghai
 API_PORT=8080
 USER_PORT=8081
 ADMIN_PORT=8082
-REDIS_PORT=6379
-POSTGRES_PORT=5432
 
 # 默認管理員（僅首次初始化時生效）
 DJ_DEFAULT_ADMIN_USERNAME=admin
@@ -127,6 +125,17 @@ POSTGRES_USER=dujiao
 POSTGRES_PASSWORD=dujiao_pass
 ```
 
+> 🔒 **安全提示（務必閱讀）：Docker 會繞過主機防火牆**
+>
+> Docker 通過直接寫入 iptables 的 `DOCKER` 鏈來實現端口映射，**完全繞過 ufw / firewalld 等主機防火牆規則**。若在 compose 中寫 `ports: - "6379:6379"`，即使你用 ufw 只放行了 80/443，Redis / PostgreSQL 等端口依然會暴露到公網，極易被掃描爆破。
+>
+> 因此本文檔遵循兩條原則：
+>
+> 1. **Redis / PostgreSQL 不導出任何端口**，僅通過內部 `dujiao-net` 網絡供 `api` 容器訪問。
+> 2. **API / User / Admin 端口綁定 `127.0.0.1`**，僅允許本機 Nginx 反代，不對公網開放。
+>
+> 如需臨時從宿主機調試 Redis/PostgreSQL，可用 `docker exec` 進入容器，或為對應服務臨時添加 `ports: - "127.0.0.1:6379:6379"`（同樣僅綁定本機回環）。
+
 ## 5. 編寫 Compose 文件
 
 ## 5.1 方案 A（SQLite + Redis）：`docker-compose.sqlite.yml`
@@ -140,8 +149,6 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-    ports:
-      - "${REDIS_PORT}:6379"
     volumes:
       - ./data/redis:/data
     healthcheck:
@@ -161,7 +168,7 @@ services:
       DJ_DEFAULT_ADMIN_USERNAME: ${DJ_DEFAULT_ADMIN_USERNAME}
       DJ_DEFAULT_ADMIN_PASSWORD: ${DJ_DEFAULT_ADMIN_PASSWORD}
     ports:
-      - "${API_PORT}:8080"
+      - "127.0.0.1:${API_PORT}:8080"
     volumes:
       - ./config/config.yml:/app/config.yml:ro
       - ./data/db:/app/db
@@ -185,7 +192,7 @@ services:
     environment:
       TZ: ${TZ}
     ports:
-      - "${USER_PORT}:80"
+      - "127.0.0.1:${USER_PORT}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -199,7 +206,7 @@ services:
     environment:
       TZ: ${TZ}
     ports:
-      - "${ADMIN_PORT}:80"
+      - "127.0.0.1:${ADMIN_PORT}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -222,8 +229,6 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-    ports:
-      - "${REDIS_PORT}:6379"
     volumes:
       - ./data/redis:/data
     healthcheck:
@@ -243,8 +248,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${POSTGRES_PORT}:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
@@ -264,7 +267,7 @@ services:
       DJ_DEFAULT_ADMIN_USERNAME: ${DJ_DEFAULT_ADMIN_USERNAME}
       DJ_DEFAULT_ADMIN_PASSWORD: ${DJ_DEFAULT_ADMIN_PASSWORD}
     ports:
-      - "${API_PORT}:8080"
+      - "127.0.0.1:${API_PORT}:8080"
     volumes:
       - ./config/config.yml:/app/config.yml:ro
       - ./data/uploads:/app/uploads
@@ -289,7 +292,7 @@ services:
     environment:
       TZ: ${TZ}
     ports:
-      - "${USER_PORT}:80"
+      - "127.0.0.1:${USER_PORT}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -303,7 +306,7 @@ services:
     environment:
       TZ: ${TZ}
     ports:
-      - "${ADMIN_PORT}:80"
+      - "127.0.0.1:${ADMIN_PORT}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -448,9 +451,13 @@ docker compose --env-file .env -f docker-compose.sqlite.yml down
 
 ## 9. 訪問與聯通性檢查
 
-- API：`http://服務器IP:${API_PORT}/health`
-- User：`http://服務器IP:${USER_PORT}`
-- Admin：`http://服務器IP:${ADMIN_PORT}`
+由於容器端口已綁定到 `127.0.0.1`，請在**服務器本機**檢查：
+
+- API：`http://127.0.0.1:${API_PORT}/health`
+- User：`http://127.0.0.1:${USER_PORT}`
+- Admin：`http://127.0.0.1:${ADMIN_PORT}`
+
+外部用戶應通過配置好的域名（經 Nginx 反代）訪問。
 
 如頁面可打開但介面異常，優先檢查：
 

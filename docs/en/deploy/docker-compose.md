@@ -107,8 +107,6 @@ TZ=Asia/Shanghai
 API_PORT=8080
 USER_PORT=8081
 ADMIN_PORT=8082
-REDIS_PORT=6379
-POSTGRES_PORT=5432
 
 # Default admin account (only effective during first-time initialization)
 DJ_DEFAULT_ADMIN_USERNAME=admin
@@ -122,6 +120,17 @@ POSTGRES_DB=dujiao_next
 POSTGRES_USER=dujiao
 POSTGRES_PASSWORD=dujiao_pass
 ```
+> 🔒 **Security notice (must read): Docker bypasses the host firewall**
+>
+> Docker implements port publishing by writing directly into the `DOCKER` iptables chain, which **completely bypasses host firewalls such as ufw and firewalld**. If you write `ports: - "6379:6379"` in compose, Redis / PostgreSQL will be exposed to the public internet even when ufw only allows 80/443 — trivially scannable and brute-forceable.
+>
+> This document therefore follows two rules:
+>
+> 1. **Redis / PostgreSQL publish no ports at all** — they are reachable only through the internal `dujiao-net` network from the `api` container.
+> 2. **API / User / Admin ports are bound to `127.0.0.1`** — reachable only from a local Nginx reverse proxy, not from the public internet.
+>
+> For ad-hoc debugging of Redis/PostgreSQL from the host, use `docker exec` into the container, or temporarily add `ports: - "127.0.0.1:6379:6379"` (which also binds only to loopback).
+
 ## 5. Writing Compose Files
 
 ## 5.1 Option A (SQLite Redis): `docker-compose.sqlite.yml`
@@ -135,8 +144,6 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-    ports:
-      - "${REDIS_PORT}:6379"
     volumes:
       - ./data/redis:/data
     healthcheck:
@@ -156,7 +163,7 @@ services:
       DJ_DEFAULT_ADMIN_USERNAME: ${DJ_DEFAULT_ADMIN_USERNAME}
       DJ_DEFAULT_ADMIN_PASSWORD: ${DJ_DEFAULT_ADMIN_PASSWORD}
     ports:
-      - "${API_PORT}:8080"
+      - "127.0.0.1:${API_PORT}:8080"
     volumes:
       - ./config/config.yml:/app/config.yml:ro
       - ./data/db:/app/db
@@ -180,7 +187,7 @@ services:
     environment:
       TZ: ${TZ}
     ports:
-      - "${USER_PORT}:80"
+      - "127.0.0.1:${USER_PORT}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -194,7 +201,7 @@ services:
     environment:
       TZ: ${TZ}
     ports:
-      - "${ADMIN_PORT}:80"
+      - "127.0.0.1:${ADMIN_PORT}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -216,8 +223,6 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-    ports:
-      - "${REDIS_PORT}:6379"
     volumes:
       - ./data/redis:/data
     healthcheck:
@@ -237,8 +242,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${POSTGRES_PORT}:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
@@ -258,7 +261,7 @@ services:
       DJ_DEFAULT_ADMIN_USERNAME: ${DJ_DEFAULT_ADMIN_USERNAME}
       DJ_DEFAULT_ADMIN_PASSWORD: ${DJ_DEFAULT_ADMIN_PASSWORD}
     ports:
-      - "${API_PORT}:8080"
+      - "127.0.0.1:${API_PORT}:8080"
     volumes:
       - ./config/config.yml:/app/config.yml:ro
       - ./data/uploads:/app/uploads
@@ -283,7 +286,7 @@ services:
     environment:
       TZ: ${TZ}
     ports:
-      - "${USER_PORT}:80"
+      - "127.0.0.1:${USER_PORT}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -297,7 +300,7 @@ services:
     environment:
       TZ: ${TZ}
     ports:
-      - "${ADMIN_PORT}:80"
+      - "127.0.0.1:${ADMIN_PORT}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -437,9 +440,13 @@ Rollback:
 
 ## 9. Access and Connectivity Checks
 
-- API: `http://your-server-ip:${API_PORT}/health`
-- User: `http://your-server-ip:${USER_PORT}`
-- Admin: `http://your-server-ip:${ADMIN_PORT}`
+Since container ports are bound to `127.0.0.1`, check from the **server itself**:
+
+- API: `http://127.0.0.1:${API_PORT}/health`
+- User: `http://127.0.0.1:${USER_PORT}`
+- Admin: `http://127.0.0.1:${ADMIN_PORT}`
+
+External users should access the services through the configured domains via the Nginx reverse proxy.
 
 If the pages load but the API endpoints fail, first check:
 
