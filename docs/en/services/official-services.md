@@ -1,12 +1,12 @@
 # Official Services
 
-> Updated: 2026-02-23
+> Updated: 2026-04-20
 
 This page describes the official technical service offerings and terms for Dujiao-Next.
 
 ## 1. Deployment Setup Service
 
-- Fee: one-time `200USD`
+- Fee: one-time `100USD`
 - Warranty: Q&A or issue resolution within 7 days
 - Client prerequisites:
   - Domain name
@@ -18,8 +18,8 @@ This page describes the official technical service offerings and terms for Dujia
 
 ## 2. Telegram Bot Service
 
-- Price: `800USD` / lifetime
-- Notes: standalone Telegram Bot feature lifetime license with continuous updates and iterative upgrades included
+- Price: `598USD` / one-time license
+- Notes: standalone Telegram Bot feature one-time license with continuous updates and iterative upgrades included
 - Details: [/en/services/telegram-bot](/en/services/telegram-bot)
 
 ## 3. Custom Development Service

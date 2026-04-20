@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.0.3] - 2026-04-20
+
+### Update Details:
+- Added full and partial refund support, making after-sales order handling more flexible.
+- Added direct admin controls for order-related rules, making day-to-day operational adjustments easier.
+- Added coupon restrictions by payment role and membership level for more precise promotion control.
+- Added delivery instructions for products so users can fill required information and receive fulfillment with less confusion.
+- Added SKU search to the admin product list and improved related SKU display for faster product lookup and management.
+
 ## [v1.0.2] - 2026-04-12
 
 ### Update Details:

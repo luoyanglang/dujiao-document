@@ -1,6 +1,6 @@
 # Telegram Bot Service Overview
 
-> Updated: 2026-03-27
+> Updated: 2026-04-20
 
 Telegram Bot is an independent Dujiao-Next extension that extends your site capabilities into Telegram scenarios. It is suitable for sites that need private-domain reach, message notifications, quick entry points, and operational broadcasts.
 
@@ -8,7 +8,7 @@ Telegram Bot is an independent Dujiao-Next extension that extends your site capa
 
 ## 1. Pricing and Service Term
 
-- Price: `800USD` / one-time license
+- Price: `598USD` / one-time license
 - Service term: one-time license
 - Update support: one-time license with ongoing updates, feature iteration, and version upgrades
 
@@ -67,7 +67,7 @@ Telegram Bot is an independent Dujiao-Next extension that extends your site capa
 
 ## 4. What Is Included After Purchase
 
-- Lifetime authorization for the Telegram Bot feature
+- One-time authorization for the Telegram Bot feature
 - Continuous updates
 - New version iterations and upgrades
 - Compatibility updates for the current mainline version
