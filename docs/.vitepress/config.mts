@@ -30,6 +30,7 @@ const rootSidebar: DefaultTheme.Sidebar = [
     text: '部署',
     items: [
       { text: '部署总览', link: '/deploy/' },
+      { text: '单二进制部署（推荐小白）', link: '/deploy/binary' },
       { text: '手动部署', link: '/deploy/manual' },
       { text: 'Docker Compose 部署', link: '/deploy/docker-compose' },
       { text: 'aaPanel 手动部署', link: '/deploy/aapanel' },
@@ -86,6 +87,7 @@ const zhHantSidebar: DefaultTheme.Sidebar = [
     text: '部署',
     items: [
       { text: '部署總覽', link: '/zh-hant/deploy/' },
+      { text: '單二進制部署（推薦新手）', link: '/zh-hant/deploy/binary' },
       { text: '手動部署', link: '/zh-hant/deploy/manual' },
       { text: 'Docker Compose 部署', link: '/zh-hant/deploy/docker-compose' },
       { text: 'aaPanel 手動部署', link: '/zh-hant/deploy/aapanel' },
@@ -142,6 +144,7 @@ const enSidebar: DefaultTheme.Sidebar = [
     text: 'Deployment',
     items: [
       { text: 'Deployment Overview', link: '/en/deploy/' },
+      { text: 'Single Binary (Recommended for Beginners)', link: '/en/deploy/binary' },
       { text: 'Manual Deployment', link: '/en/deploy/manual' },
       { text: 'Docker Compose Deployment', link: '/en/deploy/docker-compose' },
       { text: 'aaPanel Deployment', link: '/en/deploy/aapanel' },

@@ -10,6 +10,7 @@ The official documentation prioritizes formal deployment guides that can be revi
 
 > Note: Community scripts listed in the deployment module are third-party contributions, not official releases. The official documentation only provides basic security review and listing for public projects, and does not endorse third-party functionality, stability, compatibility, or long-term maintenance.
 
+- Complete beginners / want to avoid Docker multi-container setups: start with [Single Binary Deployment](/en/deploy/binary) (simplest).
 - First deployment and you want a stable long-term setup: start with [Docker Compose Deployment](/en/deploy/docker-compose).
 - You want one menu to cover deployment, updates, HTTPS, and routine operations: review the community script [langge-dujiao-next-install](https://github.com/dujiao-next/community-projects/tree/main/scripts/langge-dujiao-next-install).
 - You already run aaPanel: go directly to [aaPanel Deployment](/en/deploy/aapanel).
@@ -19,6 +20,7 @@ The official documentation prioritizes formal deployment guides that can be revi
 
 | Method | Difficulty | Best For | Key Characteristics | Guide |
 | --- | --- | --- | --- | --- |
+| Single Binary (fullstack) | Low | Complete beginners / want to avoid Docker | One binary + one Redis container, zero orchestration | [Single Binary Deployment](/en/deploy/binary) |
 | Community One-Click Script (LangGe) | Low-Medium | Users who want one menu for deployment, updates, HTTPS, and basic ops | Community-maintained, supports Docker / binary / external environment, HTTPS, version checks, and ops menus | [langge-dujiao-next-install](https://github.com/dujiao-next/community-projects/tree/main/scripts/langge-dujiao-next-install) |
 | Docker Compose | Medium | Users who need standardized and repeatable deployment | Container isolation, clear upgrade/rollback path, automation-friendly | [Docker Compose Deployment](/en/deploy/docker-compose) |
 | aaPanel Manual Deployment | Low-Medium | Users already running aaPanel | GUI-oriented operations, suitable for panel-based maintenance | [aaPanel Deployment](/en/deploy/aapanel) |
@@ -40,6 +42,7 @@ The official documentation prioritizes formal deployment guides that can be revi
 
 ## 4. Recommended Paths
 
+- You're a complete beginner who just wants to get up and running fast: use [Single Binary Deployment](/en/deploy/binary).
 - If you want a single community script for deployment, updates, and HTTPS, read the [langge-dujiao-next-install](https://github.com/dujiao-next/community-projects/tree/main/scripts/langge-dujiao-next-install) README first and decide whether its workflow fits your environment.
 - New user: start with Docker Compose; if you already use aaPanel, go directly to the aaPanel guide.
 - Long-term operations with stable repeatability: use Docker Compose.
