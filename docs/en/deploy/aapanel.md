@@ -137,6 +137,8 @@ Add in the outer gateway (Nginx):
 
 - `/api` → `http://127.0.0.1:8080/api`
 - `/uploads` → `http://127.0.0.1:8080/uploads`
+- `/sitemap.xml` → `http://127.0.0.1:8080/sitemap.xml` (user frontend domain only)
+- `/robots.txt` → `http://127.0.0.1:8080/robots.txt` (user frontend domain only)
 
 ### 7.1 Subdomain Deployment Example
 
@@ -151,6 +153,24 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    # SEO assets are generated dynamically by the backend; they must be
+    # proxied explicitly, otherwise the SPA fallback above will swallow them.
+    location = /sitemap.xml {
+        proxy_pass http://127.0.0.1:8080/sitemap.xml;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /robots.txt {
+        proxy_pass http://127.0.0.1:8080/robots.txt;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     location /api/ {

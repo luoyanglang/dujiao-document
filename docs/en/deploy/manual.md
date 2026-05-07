@@ -116,6 +116,8 @@ You can choose to:
 
 User and Admin each require their own domain. Both frontends send requests to `/api` and `/uploads`, which are forwarded by the outer Nginx to the API service (`127.0.0.1:8080`).
 
+> The user-facing domain must additionally proxy `/sitemap.xml` and `/robots.txt` to the backend; otherwise the SPA catch-all route serves a NotFound page and search engines cannot fetch them.
+
 ### 5.1 Subdomain Deployment Example
 
 - Frontend: `user.example.com` → `user/dist`
@@ -132,6 +134,24 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    # SEO assets are generated dynamically by the backend; they must be
+    # proxied explicitly, otherwise the SPA fallback above will swallow them.
+    location = /sitemap.xml {
+        proxy_pass http://127.0.0.1:8080/sitemap.xml;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /robots.txt {
+        proxy_pass http://127.0.0.1:8080/robots.txt;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     location /api/ {
