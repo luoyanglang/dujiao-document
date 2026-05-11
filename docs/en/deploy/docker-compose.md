@@ -313,7 +313,7 @@ networks:
 ```
 ## 6. Outer Nginx Reverse Proxy (Required)
 
-Both `user` and `admin` access the backend via `/api` and `/uploads`, so you need to configure a reverse proxy at the outermost gateway (Nginx/Ingress).
+Both `user` and `admin` access the backend via `/api` and `/uploads`, so you need to configure a reverse proxy at the outermost gateway (Nginx/Ingress). The user-facing domain must additionally proxy `/sitemap.xml` and `/robots.txt` to the backend; otherwise the SPA catch-all route serves a NotFound page and search engines cannot fetch them.
 
 > The example below uses the default ports:
 >
@@ -333,6 +333,24 @@ server {
 
     location / {
         proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # SEO assets are generated dynamically by the backend; they must be
+    # proxied explicitly, otherwise the SPA fallback above will swallow them.
+    location = /sitemap.xml {
+        proxy_pass http://127.0.0.1:8080/sitemap.xml;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /robots.txt {
+        proxy_pass http://127.0.0.1:8080/robots.txt;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -451,5 +469,5 @@ External users should access the services through the configured domains via the
 If the pages load but the API endpoints fail, first check:
 
 1. Whether the database and Redis addresses in `config.yml` match the container names (`postgres` / `redis`)
-2. Whether the external gateway has configured `/api` and `/uploads` reverse proxy
+2. Whether the external gateway has configured `/api` and `/uploads` reverse proxy (the user-facing domain also needs `/sitemap.xml` and `/robots.txt`)
 3. The health status of API, Redis, and PostgreSQL (`docker compose ps`)

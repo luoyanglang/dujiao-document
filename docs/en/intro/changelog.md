@@ -1,5 +1,24 @@
 # Changelog
 
+## [v1.1.0] - 2026-05-11
+
+### Update Details:
+- Added ePUSDT and BEpusdt payment channel support, giving merchants more cryptocurrency collection options.
+- Added product category enable and disable controls, making storefront and admin product visibility easier to manage.
+- Added a card-secret import deduplication switch and improved batch and inventory displays for recurring card-secret and bulk maintenance scenarios.
+- Improved stacked promotion, member price, and coupon calculations, with clearer original price, discount, and paid amount displays on checkout and order details.
+- Added site Sitemap, Robots, and multi-page SEO metadata, while improving upstream product sync and admin pagination workflows.
+
+## [v1.0.5] - 2026-04-29
+
+### Update Details:
+- Added configurable minimum purchase quantities for products, making checkout rules better suited to bulk-sale scenarios.
+- Added two-step verification for the storefront and admin panel, with admin-assisted removal when users need recovery, making account access management more flexible.
+- Added configurable site icons with consistent storefront and admin display for clearer brand recognition.
+- Added product and blog associations so product introductions, content guidance, and purchase journeys connect more smoothly.
+- Added version update checks and one-file deployment support, making upgrades and deployment options clearer.
+- Improved admin date-range selection and list action visibility, while fixing Telegram Bot menu hiding and procurement status lookup issues for steadier daily operations.
+
 ## [v1.0.4] - 2026-04-22
 
 ### Update Details:

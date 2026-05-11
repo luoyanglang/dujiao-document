@@ -320,7 +320,7 @@ networks:
 
 ## 6. 外层 Nginx 反向代理（必需）
 
-`user` 与 `admin` 分别通过各自域名的 `/api`、`/uploads` 路径访问后端，因此你需要在最外层网关（Nginx/Ingress）配置反向代理。
+`user` 与 `admin` 分别通过各自域名的 `/api`、`/uploads` 路径访问后端，因此你需要在最外层网关（Nginx/Ingress）配置反向代理。前台域名还需要把 `/sitemap.xml` 与 `/robots.txt` 反代到后端，否则会被 SPA 路由兜底为 NotFound，搜索引擎抓不到。
 
 > 下方示例使用默认端口：
 >
@@ -340,6 +340,23 @@ server {
 
     location / {
         proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # SEO 资源由后端动态生成，必须显式反代，否则会被上面的 SPA 兜底拦截
+    location = /sitemap.xml {
+        proxy_pass http://127.0.0.1:8080/sitemap.xml;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /robots.txt {
+        proxy_pass http://127.0.0.1:8080/robots.txt;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -460,5 +477,5 @@ docker compose --env-file .env -f docker-compose.sqlite.yml down
 如页面可打开但接口异常，优先检查：
 
 1. `config.yml` 中数据库与 Redis 地址是否与容器名一致（`postgres` / `redis`）
-2. 外层网关是否已配置 `/api`、`/uploads` 反向代理
+2. 外层网关是否已配置 `/api`、`/uploads` 反向代理（前台还需 `/sitemap.xml`、`/robots.txt`）
 3. API 与 Redis/PostgreSQL 健康状态（`docker compose ps`）

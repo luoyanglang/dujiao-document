@@ -123,6 +123,8 @@ npm run build
 
 User 与 Admin 前端各自通过 `/api`、`/uploads` 路径反向代理到 API 服务（`127.0.0.1:8080`），需分别配置两个域名。
 
+> 前台域名额外需要把 `/sitemap.xml` 与 `/robots.txt` 也反代到后端，否则会被 SPA 路由兜底为 NotFound，搜索引擎无法抓到。
+
 ### 5.1 分域名部署示例
 
 - 前台：`user.example.com` → `user/dist`
@@ -139,6 +141,23 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    # SEO 资源由后端动态生成，必须显式反代，否则会被上面的 SPA 兜底拦截
+    location = /sitemap.xml {
+        proxy_pass http://127.0.0.1:8080/sitemap.xml;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /robots.txt {
+        proxy_pass http://127.0.0.1:8080/robots.txt;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     location /api/ {

@@ -143,6 +143,8 @@ API 首次啟動時會讀取該配置完成管理員初始化。
 
 - `/api` → `http://127.0.0.1:8080/api`
 - `/uploads` → `http://127.0.0.1:8080/uploads`
+- `/sitemap.xml` → `http://127.0.0.1:8080/sitemap.xml`（僅前臺網域需要）
+- `/robots.txt` → `http://127.0.0.1:8080/robots.txt`（僅前臺網域需要）
 
 ### 7.1 分域名部署示例
 
@@ -157,6 +159,23 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    # SEO 資源由後端動態生成，必須顯式反代，否則會被上面的 SPA 兜底攔截
+    location = /sitemap.xml {
+        proxy_pass http://127.0.0.1:8080/sitemap.xml;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /robots.txt {
+        proxy_pass http://127.0.0.1:8080/robots.txt;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     location /api/ {
