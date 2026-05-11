@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.1.0] - 2026-05-11
+
+### Update Details:
+- Added ePUSDT and BEpusdt payment channel support, giving merchants more cryptocurrency collection options.
+- Added product category enable and disable controls, making storefront and admin product visibility easier to manage.
+- Added a card-secret import deduplication switch and improved batch and inventory displays for recurring card-secret and bulk maintenance scenarios.
+- Improved stacked promotion, member price, and coupon calculations, with clearer original price, discount, and paid amount displays on checkout and order details.
+- Added site Sitemap, Robots, and multi-page SEO metadata, while improving upstream product sync and admin pagination workflows.
+
 ## [v1.0.5] - 2026-04-29
 
 ### Update Details:
