@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.2.1] - 2026-05-27
+
+### Update Details:
+- Added a compliance acknowledgement flow so payment and finance operations can surface risk and responsibility reminders before use.
+- Added scheduled multilingual homepage popup announcements so important notices can reach visitors more promptly.
+- Improved payment callbacks and sync-return handling for WeChat Pay, PayPal, BEpusdt, and related status confirmation flows.
+- Improved upstream integration, product mapping, and order cancellation flows to reduce category, inventory sync, and fulfillment-state issues.
+- Enhanced account and operations management with admin user email-verification controls, Telegram unbinding, and admin CLI tooling.
+- Improved media uploads, admin list refresh behavior, notification emails, and Telegram login compatibility for smoother daily operations.
+
 ## [v1.1.0] - 2026-05-11
 
 ### Update Details:
