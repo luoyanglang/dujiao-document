@@ -14,7 +14,7 @@ Any of the following systems is recommended:
 
 ### 1.2 Runtime and Toolchain
 
-- Go: `1.25.3` (aligned with `api/go.mod`)
+- Go: `1.26.3` (aligned with `api/go.mod`)
 - Node.js: `20 LTS` or higher
 - npm: `10+`
 - Git: `2.30+`
@@ -62,7 +62,7 @@ cd ../api && go mod tidy
 
 ### 5.1 Go Version Mismatch
 
-If your Go version is lower than `1.25.3`, you may encounter build failures or dependency resolution issues. Upgrade to the version aligned with `go.mod`.
+If your Go version is lower than `1.26.3`, you may encounter build failures or dependency resolution issues. Upgrade to the version aligned with `go.mod`.
 
 ### 5.2 Redis Not Running
 
