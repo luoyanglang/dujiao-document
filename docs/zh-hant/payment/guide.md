@@ -1,6 +1,6 @@
 # 支付配置與回調指南
 
-> 更新時間：2026-04-04
+> 更新時間：2026-06-14
 
 目標只有兩個：
 
@@ -199,9 +199,35 @@ API 透過各站點的反向代理訪問（如 `user.example.com/api` 和 `admin
 - `callback_url` 填：`https://user.example.com/api/v1/payments/callback`
 - `return_url` 填：`https://shop.example.com/pay`
 
+### 3.10 DujiaoPay
+
+> DujiaoPay 是生態官方支付方式，後台新增渠道時建議優先選擇 `DujiaoPay` 渠道類型。
+
+常用必填：
+
+- API 地址（api_base_url，預設 `https://www.dujiaopay.com`）
+- API Key ID（api_key_id）
+- API Secret（api_secret）
+- Webhook Secret（webhook_secret）
+- 渠道類型（channel_type，對應 DujiaoPay 的 `token_id`，如 `tron-usdt`、`base-usdc`）
+- 法幣（fiat_currency，常用 CNY / USD / HKD）
+
+常用選填：
+
+- 成功回跳地址（success_url）
+- 取消回跳地址（cancel_url）
+
+建議：
+
+- `success_url` 和 `cancel_url` 都填：`https://shop.example.com/pay`
+- DujiaoPay 控制台的 Webhook URL 填：`https://user.example.com/api/v1/payments/webhook/dujiaopay?channel_id=你的渠道ID`
+- 如果暫時不知道渠道 ID，也可以先填：`https://user.example.com/api/v1/payments/webhook/dujiaopay`，系統會按啟用的 DujiaoPay 渠道逐個用 `webhook_secret` 驗簽匹配
+- 互動模式選擇 `qr` 時，前台會展示錢包二維碼、錢包地址、鏈上應付數量、鏈和支付幣種；互動模式選擇 `redirect` 時，使用者會跳轉到 DujiaoPay 收銀台
+- 支援的鏈與幣種以 DujiaoPay 官方文件為準：<https://www.dujiaopay.com/docs>
+
 ---
 
-## 3.10 手續費設定
+## 3.11 手續費設定
 
 每個支付渠道可獨立設定手續費，用於核算實際到帳金額：
 
@@ -214,7 +240,7 @@ API 透過各站點的反向代理訪問（如 `user.example.com/api` 和 `admin
 
 ---
 
-## 3.11 互動模式
+## 3.12 互動模式
 
 建立支付渠道時需選擇互動模式，不同模式決定使用者的支付體驗：
 
@@ -263,6 +289,17 @@ API 透過各站點的反向代理訪問（如 `user.example.com/api` 和 `admin
 
 - `channel_id` 建議帶上，多個 Stripe 渠道時更穩妥。
 
+### 4.4 DujiaoPay（單獨 Webhook 地址）
+
+填寫地址：
+
+- `POST https://user.example.com/api/v1/payments/webhook/dujiaopay?channel_id=你的渠道ID`
+
+說明：
+
+- `channel_id` 建議帶上，多個 DujiaoPay 渠道時更穩妥。
+- 如果不帶 `channel_id`，系統會按啟用的 DujiaoPay 渠道逐個用 `webhook_secret` 驗簽匹配。
+
 ## 5. 自訂回調路由（可選）
 
 由於本專案是開源的，預設的回調路徑（如 `/api/v1/payments/callback`）是公開可知的，存在被惡意撞庫或模擬回調的風險。你可以在後台自訂回調路由路徑，隱藏預設路徑來增強安全性。
@@ -273,11 +310,12 @@ API 透過各站點的反向代理訪問（如 `user.example.com/api` 和 `admin
 
 - `後台 → 系統設定 → 回調路由`
 
-可自訂以下 4 條回調路徑：
+可自訂以下 5 條回調路徑：
 
 | 回調類型 | 預設路徑 | 說明 |
 |---------|---------|------|
 | 支付回調 | `/api/v1/payments/callback` | 支付寶/微信/易支付/TokenPay/BEpusdt/epusdt/OKPay 通用 |
+| DujiaoPay Webhook | `/api/v1/payments/webhook/dujiaopay` | DujiaoPay 專用 |
 | PayPal Webhook | `/api/v1/payments/webhook/paypal` | PayPal 專用 |
 | Stripe Webhook | `/api/v1/payments/webhook/stripe` | Stripe 專用 |
 | 上游回調 | `/api/v1/upstream/callback` | 上游供貨商回調 |
@@ -287,18 +325,22 @@ API 透過各站點的反向代理訪問（如 `user.example.com/api` 和 `admin
 ### 5.2 設定規則
 
 - 自訂路徑必須以 `/api/` 開頭，例如：`/api/my-secret-path/pay-notify`
-- 4 條路徑不能重複
+- 5 條路徑不能重複
 - 不能與系統已有路由衝突（如 `/api/v1/admin/...`、`/api/v1/public/...`）
 
 ### 5.3 設定後注意事項
 
 ::: warning 重要
-自訂回調路由後，你必須同步更新各支付渠道設定中的異步通知地址（`notify_url` / `callback_url`），將其中的路徑部分替換為你設定的自訂路徑。
+自訂回調路由後，你必須同步更新各支付渠道設定中的異步通知地址（`notify_url` / `callback_url` / Webhook URL），將其中的路徑部分替換為你設定的自訂路徑。
 
 例如，你將支付回調路由改為 `/api/my-secret/pay-notify`，則：
 
 - 原來填：`https://user.example.com/api/v1/payments/callback`
 - 現在填：`https://user.example.com/api/my-secret/pay-notify`
+
+DujiaoPay 使用單獨的 Webhook 路由。如果你將 DujiaoPay Webhook 路由改為 `/api/my-secret/dujiaopay-webhook`，則 DujiaoPay 控制台裡也要同步改成：
+
+- `https://user.example.com/api/my-secret/dujiaopay-webhook?channel_id=你的渠道ID`
 
 否則支付平台的回調通知將無法到達你的伺服器。
 :::
@@ -324,7 +366,7 @@ API 透過各站點的反向代理訪問（如 `user.example.com/api` 和 `admin
 
 優先檢查：
 
-- 回調地址是否填錯網域/路徑（如果設定了自訂回調路由，請確認各渠道的 `notify_url` 已同步更新）
+- 回調地址是否填錯網域/路徑（如果設定了自訂回調路由，請確認各渠道的 `notify_url` / `callback_url` / Webhook URL 已同步更新）
 - API 網域是否可以被公網訪問
 - 支付平台後台是否有回調失敗記錄
 
@@ -338,5 +380,5 @@ API 透過各站點的反向代理訪問（如 `user.example.com/api` 和 `admin
 
 優先處理：
 
-- PayPal、Stripe 的 Webhook 地址都帶上 `channel_id`
+- PayPal、Stripe、DujiaoPay 的 Webhook 地址都帶上 `channel_id`
 - 後台只保留你正在使用的渠道，避免重複啟用

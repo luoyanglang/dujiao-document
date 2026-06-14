@@ -1,6 +1,6 @@
 # Payment Configuration and Callback Guide
 
-> Updated: 2026-04-04
+> Updated: 2026-06-14
 
 You only need two outcomes:
 
@@ -199,9 +199,35 @@ Recommended:
 - `callback_url`: `https://user.example.com/api/v1/payments/callback`
 - `return_url`: `https://shop.example.com/pay`
 
+### 3.10 DujiaoPay
+
+> DujiaoPay is the official ecosystem payment method. When creating a channel in admin, prefer the `DujiaoPay` provider type.
+
+Usually required:
+
+- API base URL (`api_base_url`, default `https://www.dujiaopay.com`)
+- API Key ID (`api_key_id`)
+- API Secret (`api_secret`)
+- Webhook Secret (`webhook_secret`)
+- Channel type (`channel_type`, mapped to DujiaoPay `token_id`, e.g. `tron-usdt`, `base-usdc`)
+- Fiat currency (`fiat_currency`, commonly CNY / USD / HKD)
+
+Usually optional:
+
+- Success URL (`success_url`)
+- Cancel URL (`cancel_url`)
+
+Recommended:
+
+- Set both `success_url` and `cancel_url` to `https://shop.example.com/pay`
+- Set the DujiaoPay console Webhook URL to `https://user.example.com/api/v1/payments/webhook/dujiaopay?channel_id=YOUR_CHANNEL_ID`
+- If you do not know the channel ID yet, you can use `https://user.example.com/api/v1/payments/webhook/dujiaopay`; the system will try enabled DujiaoPay channels one by one and match them by `webhook_secret`
+- In `qr` interaction mode, the storefront displays the wallet QR code, wallet address, on-chain amount due, chain, and payment token; in `redirect` mode, the customer is redirected to the DujiaoPay checkout
+- Supported chains and tokens should follow the official DujiaoPay docs: <https://www.dujiaopay.com/docs>
+
 ---
 
-## 3.10 Fee Configuration
+## 3.11 Fee Configuration
 
 Each payment channel can have its own fee settings for calculating the actual amount received:
 
@@ -214,7 +240,7 @@ Fees are used only for admin statistics and profit calculation. They do **not** 
 
 ---
 
-## 3.11 Interaction Modes
+## 3.12 Interaction Modes
 
 When creating a payment channel, you must select an interaction mode that determines the customer's payment experience:
 
@@ -263,6 +289,17 @@ Note:
 
 - `channel_id` is strongly recommended if you have multiple Stripe channels.
 
+### 4.4 DujiaoPay (separate webhook URL)
+
+Use:
+
+- `POST https://user.example.com/api/v1/payments/webhook/dujiaopay?channel_id=YOUR_CHANNEL_ID`
+
+Note:
+
+- `channel_id` is strongly recommended if you have multiple DujiaoPay channels.
+- If `channel_id` is omitted, the system tries enabled DujiaoPay channels one by one and matches them by `webhook_secret`.
+
 ## 5. Custom Callback Routes (Optional)
 
 Since this project is open source, the default callback paths (e.g., `/api/v1/payments/callback`) are publicly known, which poses a risk of malicious callback simulation or brute-force attacks. You can customize callback route paths in the admin panel to hide the defaults and improve security.
@@ -273,11 +310,12 @@ Go to:
 
 - `Admin → Settings → Callback Routes`
 
-You can customize these 4 callback paths:
+You can customize these 5 callback paths:
 
 | Callback Type | Default Path | Description |
 |--------------|-------------|-------------|
 | Payment Callback | `/api/v1/payments/callback` | Shared by Alipay/WeChat/EPay/TokenPay/BEpusdt/epusdt/OKPay |
+| DujiaoPay Webhook | `/api/v1/payments/webhook/dujiaopay` | DujiaoPay only |
 | PayPal Webhook | `/api/v1/payments/webhook/paypal` | PayPal only |
 | Stripe Webhook | `/api/v1/payments/webhook/stripe` | Stripe only |
 | Upstream Callback | `/api/v1/upstream/callback` | Upstream supplier callback |
@@ -287,18 +325,22 @@ Leave empty to keep using the default path.
 ### 5.2 Rules
 
 - Custom paths must start with `/api/`, e.g., `/api/my-secret-path/pay-notify`
-- All 4 paths must be unique (no duplicates)
+- All 5 paths must be unique (no duplicates)
 - Must not conflict with existing system routes (e.g., `/api/v1/admin/...`, `/api/v1/public/...`)
 
 ### 5.3 After Configuration
 
 ::: warning Important
-After customizing callback routes, you **must** update the notification URL (`notify_url` / `callback_url`) in each payment channel configuration to match the new path.
+After customizing callback routes, you **must** update the notification URL (`notify_url` / `callback_url` / Webhook URL) in each payment channel configuration to match the new path.
 
 For example, if you set the payment callback route to `/api/my-secret/pay-notify`:
 
 - Before: `https://user.example.com/api/v1/payments/callback`
 - After: `https://user.example.com/api/my-secret/pay-notify`
+
+DujiaoPay uses a separate webhook route. If you set the DujiaoPay Webhook route to `/api/my-secret/dujiaopay-webhook`, update the DujiaoPay console Webhook URL to:
+
+- `https://user.example.com/api/my-secret/dujiaopay-webhook?channel_id=YOUR_CHANNEL_ID`
 
 Otherwise, payment provider callbacks will not reach your server.
 :::
@@ -324,7 +366,7 @@ Test in this order:
 
 Check first:
 
-- Callback URL typo (domain/path) — if you configured custom callback routes, make sure each channel's `notify_url` has been updated accordingly
+- Callback URL typo (domain/path) — if you configured custom callback routes, make sure each channel's `notify_url` / `callback_url` / Webhook URL has been updated accordingly
 - API domain not publicly reachable
 - Failed callback logs in payment provider console
 
@@ -338,5 +380,5 @@ Check first:
 
 Fix:
 
-- Always include `channel_id` in PayPal and Stripe webhook URLs
+- Always include `channel_id` in PayPal, Stripe, and DujiaoPay webhook URLs
 - Keep only channels you actively use enabled
