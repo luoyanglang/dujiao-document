@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.2.2] - 2026-06-14
+
+### Update Details:
+- Added the DujiaoPay payment channel, enabling DujiaoPay collection integration with improved payment return parameters and callback handling.
+- Added wholesale tier pricing management under the marketing management entry, with storefront discount display and more consistent pricing fallback behavior.
+- Added a registration email-domain allowlist so merchants can restrict allowed signup domains and improve trust in registered users.
+- Added card-secret export and bulk media deletion capabilities, making bulk inventory and asset maintenance more efficient.
+- Improved admin user sorting, promotion-price search, wholesale-price filtering, and list displays for smoother daily operations.
+- Fixed Telegram user level assignment, order statistic counts, default language display, and selected payment field issues for steadier storefront and admin use.
+
 ## [v1.2.1] - 2026-05-27
 
 ### Update Details:
