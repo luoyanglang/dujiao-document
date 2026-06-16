@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "packageManager": "pnpm@10.34.3",
   "scripts": {
     "docs:dev": "vitepress dev docs --port 5175",
     "docs:build": "vitepress build docs",
@@ -10,5 +11,10 @@
   },
   "devDependencies": {
     "vitepress": "^1.6.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
