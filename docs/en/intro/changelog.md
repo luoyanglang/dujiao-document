@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.3.0] - 2026-06-23
+
+### Update Details:
+- Added reseller mode covering application admission, custom domains, dedicated site settings, product rules, and order attribution for white-label reseller operations.
+- Added reseller finance and withdrawal management with commission posting, balance accounts, ledger details, withdrawal review, and refund clawbacks for clearer accounting.
+- Added a user-side reseller console where resellers can review dashboards, orders, products, domains, site settings, ledgers, and withdrawal records.
+- Added admin reseller operations management for profile review, domain management, site settings, product rules, financial accounts, and withdrawal handling.
+- Added storefront template selection for classic/vault and improved storefront page structure and component reuse for more flexible shop presentation.
+- Added fuzzy stock display for products, and fixed OKPay JSON callbacks, gateway currency handling, payment-method switching, and selected product integration issues for steadier payment and checkout flows.
+
 ## [v1.2.2] - 2026-06-14
 
 ### Update Details:
